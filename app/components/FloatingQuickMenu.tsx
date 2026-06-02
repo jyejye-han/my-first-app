@@ -20,7 +20,7 @@ const TOOLS = [
   },
   {
     id: "aicubot",  label: "AI큐봇",   emoji: "🤖",
-    href: "/edutech/ai-eval",
+    href: "__aicubot__",
     iconBg: "bg-blue-500",
   },
   {
@@ -47,10 +47,14 @@ export default function FloatingQuickMenu() {
   // ── 퀴즈나우 팝업 상태 ──
   const [quiznowPopup, setQuiznowPopup] = useState(false);
 
+  // ── AI큐봇 팝업 상태 ──
+  const [aicubotPopup, setAicubotPopup] = useState(false);
+
   const handleClick = (href: string) => {
     if (href === "__video__")    { setVideoPopup(true);    return; }
     if (href === "__liveshot__") { setLiveshotPopup(true); return; }
     if (href === "__quiznow__")  { setQuiznowPopup(true);  return; }
+    if (href === "__aicubot__")  { setAicubotPopup(true);  return; }
   };
 
   return (
@@ -101,7 +105,7 @@ export default function FloatingQuickMenu() {
                 </>
               );
 
-              if (tool.href === "__video__" || tool.href === "__liveshot__" || tool.href === "__quiznow__") {
+              if (["__video__","__liveshot__","__quiznow__","__aicubot__"].includes(tool.href)) {
                 return (
                   <li key={tool.id}>
                     <button onClick={() => handleClick(tool.href)} className={rowCls}>{inner}</button>
@@ -284,6 +288,42 @@ export default function FloatingQuickMenu() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                 </svg>
                 퀴즈나우 시작하기
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── AI큐봇 팝업 ── */}
+      {aicubotPopup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setAicubotPopup(false)} />
+          <div className="relative z-10 max-w-4xl w-full">
+            <button
+              onClick={() => setAicubotPopup(false)}
+              className="absolute -top-4 -right-4 z-10 w-9 h-9 bg-white rounded-full shadow-lg flex items-center justify-center text-slate-600 hover:bg-red-500 hover:text-white transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <img
+              src="/images/aicubot-preview.png"
+              alt="AI큐봇 화면"
+              className="w-full rounded-2xl shadow-2xl"
+            />
+            <div className="mt-4 flex justify-center">
+              <a
+                href="https://www.ybmcloud.com/?siteType=E"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setAicubotPopup(false)}
+                className="flex items-center gap-2 px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-xl shadow-lg transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+                AI큐봇 시작하기
               </a>
             </div>
           </div>
