@@ -1,6 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useMyClassBooks } from "../lib/useMyClassBooks";
 
 const LESSON_MATERIALS = [
   { id: "vocab",     label: "어휘리스트",  icon: "📝", type: "PDF",  color: "text-rose-500",   border: "border-rose-200",   bg: "bg-rose-50"   },
@@ -10,130 +11,133 @@ const LESSON_MATERIALS = [
   { id: "audio",     label: "듣기파일",    icon: "🎧", type: "MP3",  color: "text-purple-600", border: "border-purple-200", bg: "bg-purple-50" },
 ];
 
-const MY_BOOKS = [
-  {
-    id: "1",
-    title: "Grammar Now",
-    author: "중학영문법 · YBM 편집부",
-    levelGroup: "중등",
-    category: "문법",
-    emoji: "📘",
-    image: "/images/books/reading-prime-1.jpg",
-    publishDate: "2025.03",
+type TocItem = { title: string; subItems: { label: string; pages: string }[] };
+type BookEntry = {
+  id: string; title: string; author: string;
+  levelGroup: string; category: string; emoji: string;
+  image?: string; publishDate: string; toc: TocItem[];
+};
+
+function gt(titles: string[]): TocItem[] {
+  return titles.map((title, i) => ({
+    title,
+    subItems: [
+      { label: "[1~2차시] 개념 학습 및 연습", pages: `pp. ${i * 12 + 1}~${i * 12 + 10}` },
+      { label: "[3차시] 정리 및 평가",         pages: `pp. ${i * 12 + 11}~${i * 12 + 12}` },
+    ],
+  }));
+}
+
+const BOOK_CATALOG: Record<string, BookEntry> = {
+  "1": {
+    id: "1", title: "Reading Prime 1", author: "YBM 편집부",
+    levelGroup: "중등", category: "독해", emoji: "📘",
+    image: "/images/books/reading-prime-1.jpg", publishDate: "2025.03",
     toc: [
-      { title: "Lesson 1 Hello! I'm Dito", subItems: [
-        { label: "[1~2차시] Study Points ~ Listen & Speak", pages: "pp. 4~9" },
-        { label: "[3차시] Let's Communicate", pages: "pp. 10~11" },
-      ]},
-      { title: "Lesson 2 Sit Down, Please", subItems: [
-        { label: "[1~2차시] Grammar Points ~ Practice", pages: "pp. 12~17" },
-        { label: "[3차시] Real Talk", pages: "pp. 18~19" },
-      ]},
-      { title: "Lesson 3 What's This?", subItems: [
-        { label: "[1~2차시] Grammar Points ~ Practice", pages: "pp. 20~25" },
-        { label: "[3차시] Real Talk", pages: "pp. 26~27" },
-      ]},
-      { title: "Special Link 1", subItems: [
-        { label: "[1차시] 종합 정리 및 평가", pages: "pp. 28~31" },
-      ]},
-      { title: "Lesson 4 I Like Pizza", subItems: [
-        { label: "[1~2차시] Grammar Points ~ Practice", pages: "pp. 32~37" },
-        { label: "[3차시] Real Talk", pages: "pp. 38~39" },
-      ]},
-      { title: "Lesson 5 I Can Swim!", subItems: [
-        { label: "[1~2차시] Grammar Points ~ Practice", pages: "pp. 40~45" },
-        { label: "[3차시] Real Talk", pages: "pp. 46~47" },
-      ]},
-      { title: "Special Link 2", subItems: [
-        { label: "[1차시] 종합 정리 및 평가", pages: "pp. 48~51" },
-      ]},
-      { title: "Lesson 6 It's Sunny Today", subItems: [
-        { label: "[1~2차시] Grammar Points ~ Practice", pages: "pp. 52~57" },
-        { label: "[3차시] Real Talk", pages: "pp. 58~59" },
-      ]},
-      { title: "Lesson 7 Let's Go to the Park", subItems: [
-        { label: "[1~2차시] Grammar Points ~ Practice", pages: "pp. 60~65" },
-        { label: "[3차시] Real Talk", pages: "pp. 66~67" },
-      ]},
-      { title: "Lesson 8 Where Is My Cap?", subItems: [
-        { label: "[1~2차시] Grammar Points ~ Practice", pages: "pp. 68~73" },
-        { label: "[3차시] Real Talk", pages: "pp. 74~75" },
-      ]},
+      { title: "Unit 1 - Daily Life",            subItems: [{ label: "[1~2차시] Reading Comprehension", pages: "pp. 8~13" },  { label: "[3차시] Writing & Review", pages: "pp. 14~15" }] },
+      { title: "Unit 2 - Nature & Environment",  subItems: [{ label: "[1~2차시] Reading Comprehension", pages: "pp. 16~21" }, { label: "[3차시] Writing & Review", pages: "pp. 22~23" }] },
+      { title: "Unit 3 - Science & Technology",  subItems: [{ label: "[1~2차시] Reading Comprehension", pages: "pp. 24~29" }, { label: "[3차시] Writing & Review", pages: "pp. 30~31" }] },
+      { title: "Unit 4 - Culture & Arts",        subItems: [{ label: "[1~2차시] Reading Comprehension", pages: "pp. 32~37" }, { label: "[3차시] Writing & Review", pages: "pp. 38~39" }] },
+      { title: "Unit 5 - People & Society",      subItems: [{ label: "[1~2차시] Reading Comprehension", pages: "pp. 40~45" }, { label: "[3차시] Writing & Review", pages: "pp. 46~47" }] },
+      { title: "Unit 6 - Review & Assessment",   subItems: [{ label: "[1~2차시] 종합 독해 연습",         pages: "pp. 48~53" }, { label: "[3차시] 최종 평가",          pages: "pp. 54~55" }] },
     ],
   },
-  {
-    id: "2",
-    title: "Reading Prime 1",
-    author: "YBM 편집부",
-    levelGroup: "중등",
-    category: "독해",
-    emoji: "📗",
-    image: "/images/books/reading-prime-2.jpg",
-    publishDate: "2025.01",
+  "2": {
+    id: "2", title: "알리GO 올리GO 서술형 쓰기 2", author: "YBM 편집부",
+    levelGroup: "중등", category: "쓰기", emoji: "📗",
+    image: "/images/books/aligo-oligo.jpg", publishDate: "2025.01",
+    toc: gt(["Chapter 1 - 문장 기초", "Chapter 2 - 서술형 표현", "Chapter 3 - 단락 쓰기", "Chapter 4 - 실전 내신 대비"]),
+  },
+  "3": {
+    id: "3", title: "Phonics NOW 1", author: "이재홍 외",
+    levelGroup: "초등", category: "파닉스", emoji: "📙",
+    image: "/images/books/phonics-now-1.jpg", publishDate: "2024.09",
     toc: [
-      { title: "Unit 1 - Daily Life", subItems: [
-        { label: "[1~2차시] Reading Comprehension", pages: "pp. 8~13" },
-        { label: "[3차시] Writing & Review", pages: "pp. 14~15" },
-      ]},
-      { title: "Unit 2 - Nature & Environment", subItems: [
-        { label: "[1~2차시] Reading Comprehension", pages: "pp. 16~21" },
-        { label: "[3차시] Writing & Review", pages: "pp. 22~23" },
-      ]},
-      { title: "Unit 3 - Science & Technology", subItems: [
-        { label: "[1~2차시] Reading Comprehension", pages: "pp. 24~29" },
-        { label: "[3차시] Writing & Review", pages: "pp. 30~31" },
-      ]},
-      { title: "Unit 4 - Culture & Arts", subItems: [
-        { label: "[1~2차시] Reading Comprehension", pages: "pp. 32~37" },
-        { label: "[3차시] Writing & Review", pages: "pp. 38~39" },
-      ]},
-      { title: "Unit 5 - People & Society", subItems: [
-        { label: "[1~2차시] Reading Comprehension", pages: "pp. 40~45" },
-        { label: "[3차시] Writing & Review", pages: "pp. 46~47" },
-      ]},
-      { title: "Unit 6 - Review & Assessment", subItems: [
-        { label: "[1~2차시] 종합 독해 연습", pages: "pp. 48~53" },
-        { label: "[3차시] 최종 평가", pages: "pp. 54~55" },
-      ]},
+      { title: "1장 - 단모음",     subItems: [{ label: "[1~2차시] 개념 학습 ~ 기초 연습", pages: "pp. 6~11" },  { label: "[3차시] 실전 문제풀이", pages: "pp. 12~13" }] },
+      { title: "2장 - 장모음",     subItems: [{ label: "[1~2차시] 개념 학습 ~ 기초 연습", pages: "pp. 14~19" }, { label: "[3차시] 실전 문제풀이", pages: "pp. 20~21" }] },
+      { title: "3장 - 이중자음",   subItems: [{ label: "[1~2차시] 개념 학습 ~ 기초 연습", pages: "pp. 22~27" }, { label: "[3차시] 실전 문제풀이", pages: "pp. 28~29" }] },
+      { title: "4장 - 이중모음",   subItems: [{ label: "[1~2차시] 개념 학습 ~ 기초 연습", pages: "pp. 30~35" }, { label: "[3차시] 실전 문제풀이", pages: "pp. 36~37" }] },
+      { title: "5장 - Silent e",  subItems: [{ label: "[1~2차시] 개념 학습 ~ 기초 연습", pages: "pp. 38~43" }, { label: "[3차시] 실전 문제풀이", pages: "pp. 44~45" }] },
+      { title: "6장 - 복합 패턴",  subItems: [{ label: "[1~2차시] 개념 학습 ~ 기초 연습", pages: "pp. 46~51" }, { label: "[3차시] 실전 문제풀이", pages: "pp. 52~53" }] },
     ],
   },
-  {
-    id: "3",
-    title: "Phonics NOW 1",
-    author: "이재홍 외",
-    levelGroup: "초등",
-    category: "파닉스",
-    emoji: "📙",
-    image: "/images/books/phonics-now-1.jpg",
-    publishDate: "2024.09",
-    toc: [
-      { title: "1장 - 명사와 관사", subItems: [
-        { label: "[1~2차시] 개념 학습 ~ 기초 연습", pages: "pp. 6~11" },
-        { label: "[3차시] 실전 문제풀이", pages: "pp. 12~13" },
-      ]},
-      { title: "2장 - 대명사", subItems: [
-        { label: "[1~2차시] 개념 학습 ~ 기초 연습", pages: "pp. 14~19" },
-        { label: "[3차시] 실전 문제풀이", pages: "pp. 20~21" },
-      ]},
-      { title: "3장 - 동사의 종류", subItems: [
-        { label: "[1~2차시] 개념 학습 ~ 기초 연습", pages: "pp. 22~27" },
-        { label: "[3차시] 실전 문제풀이", pages: "pp. 28~29" },
-      ]},
-      { title: "4장 - 시제 기초", subItems: [
-        { label: "[1~2차시] 개념 학습 ~ 기초 연습", pages: "pp. 30~35" },
-        { label: "[3차시] 실전 문제풀이", pages: "pp. 36~37" },
-      ]},
-      { title: "5장 - 형용사와 부사", subItems: [
-        { label: "[1~2차시] 개념 학습 ~ 기초 연습", pages: "pp. 38~43" },
-        { label: "[3차시] 실전 문제풀이", pages: "pp. 44~45" },
-      ]},
-      { title: "6장 - 전치사", subItems: [
-        { label: "[1~2차시] 개념 학습 ~ 기초 연습", pages: "pp. 46~51" },
-        { label: "[3차시] 실전 문제풀이", pages: "pp. 52~53" },
-      ]},
-    ],
+  "4": {
+    id: "4", title: "연타 문법+쓰기 Level 1", author: "YBM 편집부",
+    levelGroup: "중등", category: "문법", emoji: "📕",
+    image: "/images/books/image-yeontar-grammar.jpg", publishDate: "2025.02",
+    toc: gt(["Point 1 - 명사·대명사", "Point 2 - 동사의 시제", "Point 3 - 조동사", "Point 4 - 형용사·부사", "Point 5 - 전치사·접속사"]),
   },
-];
+  "5": {
+    id: "5", title: "부스터 보카", author: "YBM 편집부",
+    levelGroup: "고등", category: "어휘", emoji: "📓",
+    image: "/images/books/booster-voca.jpg", publishDate: "2024.06",
+    toc: gt(["Day 1 - 일상·생활 어휘", "Day 2 - 학문·학습 어휘", "Day 3 - 사회·경제 어휘", "Day 4 - 자연·환경 어휘", "Day 5 - 수능 빈출 고급 어휘"]),
+  },
+  "6": {
+    id: "6", title: "Reading Prime 2", author: "YBM 편집부",
+    levelGroup: "중등", category: "독해", emoji: "📔",
+    image: "/images/books/reading-prime-2.jpg", publishDate: "2024.11",
+    toc: gt(["Unit 1 - Social Issues", "Unit 2 - Science & Health", "Unit 3 - History & Culture", "Unit 4 - Environment", "Unit 5 - Technology", "Unit 6 - Final Review"]),
+  },
+  "7": {
+    id: "7", title: "Business English Master", author: "John Kim",
+    levelGroup: "성인", category: "회화", emoji: "📒", publishDate: "2025.04",
+    toc: gt(["Chapter 1 - 미팅 영어", "Chapter 2 - 이메일 작성", "Chapter 3 - 프레젠테이션", "Chapter 4 - 협상 표현"]),
+  },
+  "8": {
+    id: "8", title: "개념 연산 SOS 중등 수학 3·1", author: "YBM 편집부",
+    levelGroup: "중등", category: "수학", emoji: "📃",
+    image: "/images/books/gaenyeom-sos.jpg", publishDate: "2025.05",
+    toc: gt(["I. 실수와 그 계산", "II. 다항식의 곱셈", "III. 이차방정식", "IV. 이차함수"]),
+  },
+  "9": {
+    id: "9", title: "중학 영어 완성 1", author: "서연희 외",
+    levelGroup: "중등", category: "종합", emoji: "📑", publishDate: "2024.08",
+    toc: gt(["Unit 1 - 문법 기초", "Unit 2 - 독해 훈련", "Unit 3 - 듣기 연습", "Unit 4 - 어휘 확장", "Unit 5 - 종합 평가"]),
+  },
+  "10": {
+    id: "10", title: "Booster 유형독해", author: "YBM 편집부",
+    levelGroup: "고등", category: "독해", emoji: "📰",
+    image: "/images/books/booster-reading.jpg", publishDate: "2025.02",
+    toc: gt(["Part 1 - 주제·제목 유형", "Part 2 - 빈칸 추론 유형", "Part 3 - 순서·삽입 유형", "Part 4 - 장문 독해", "Part 5 - 실전 모의고사"]),
+  },
+  "11": {
+    id: "11", title: "빈출구문 상승", author: "YBM 편집부",
+    levelGroup: "고등", category: "구문", emoji: "📄",
+    image: "/images/books/binchul-gumun.jpg", publishDate: "2024.12",
+    toc: gt(["Chapter 1 - 명사구·명사절", "Chapter 2 - 관계사", "Chapter 3 - 분사구문", "Chapter 4 - 비교·강조 구문", "Chapter 5 - 실전 적용"]),
+  },
+  "12": {
+    id: "12", title: "Benchmark Reading Starter 1", author: "YBM 편집부",
+    levelGroup: "초등", category: "독해", emoji: "📗",
+    image: "/images/books/benchmark-reading-starter-1.jpg", publishDate: "2024.03",
+    toc: gt(["Unit 1 - Animals", "Unit 2 - My Body", "Unit 3 - Colors & Shapes", "Unit 4 - Food & Health"]),
+  },
+  "13": {
+    id: "13", title: "Benchmark Reading Starter 3", author: "YBM 편집부",
+    levelGroup: "초등", category: "독해", emoji: "📘",
+    image: "/images/books/benchmark-reading-starter-3.jpg", publishDate: "2024.03",
+    toc: gt(["Unit 1 - Nature", "Unit 2 - Science", "Unit 3 - Community", "Unit 4 - World Cultures"]),
+  },
+  "14": {
+    id: "14", title: "Booster 구문독해", author: "YBM 편집부",
+    levelGroup: "고등", category: "구문", emoji: "📒",
+    image: "/images/books/booster-grammar.jpg", publishDate: "2025.01",
+    toc: gt(["Part 1 - 핵심 구문 1~20", "Part 2 - 핵심 구문 21~42", "Part 3 - 핵심 구문 43~63", "Part 4 - 실전 TEST"]),
+  },
+  "15": {
+    id: "15", title: "Write NOW 1", author: "YBM 편집부",
+    levelGroup: "초등", category: "쓰기", emoji: "✏️",
+    image: "/images/books/write-now-1.jpg", publishDate: "2025.03",
+    toc: gt(["Unit 1 - Letters & Words", "Unit 2 - Simple Sentences", "Unit 3 - Describing", "Unit 4 - Short Paragraphs"]),
+  },
+  "16": {
+    id: "16", title: "Listening Booster 30", author: "YBM 편집부",
+    levelGroup: "고등", category: "듣기", emoji: "🎧",
+    image: "/images/books/listening-booster-30.jpg", publishDate: "2025.02",
+    toc: gt(["Part 1 - 목적·주제 유형", "Part 2 - 내용 일치 유형", "Part 3 - 그림·도표 유형", "Part 4 - 실전 모의고사 1~10", "Part 5 - 실전 모의고사 11~30"]),
+  },
+};
 
 const TOOLS = [
   {
@@ -213,8 +217,17 @@ const TOOLS = [
 ];
 
 export default function MyClassClient() {
-  const [selectedId, setSelectedId] = useState(MY_BOOKS[0].id);
-  const book = MY_BOOKS.find((b) => b.id === selectedId) ?? MY_BOOKS[0];
+  const { ids: myBookIds, removeBook } = useMyClassBooks();
+  const [selectedId, setSelectedId] = useState<string>("");
+
+  useEffect(() => {
+    if (myBookIds.length > 0 && (!selectedId || !myBookIds.includes(selectedId))) {
+      setSelectedId(myBookIds[0]);
+    }
+    if (myBookIds.length === 0) setSelectedId("");
+  }, [myBookIds]);
+
+  const book = BOOK_CATALOG[selectedId];
 
   // 수업안 만들기 팝업
   const [lessonPreviewPopup, setLessonPreviewPopup] = useState(false);
@@ -268,25 +281,43 @@ export default function MyClassClient() {
           </div>
 
           {/* 교재 목록 */}
-          <ul className="space-y-1">
-            {MY_BOOKS.map((b) => (
-              <li key={b.id}>
-                <button
-                  onClick={() => setSelectedId(b.id)}
-                  className={`w-full text-left flex items-center gap-2 px-2.5 py-2 rounded-lg transition-all text-sm ${
-                    selectedId === b.id
-                      ? "text-blue-700 font-semibold"
-                      : "text-slate-600 hover:text-slate-800"
-                  }`}
-                >
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                    selectedId === b.id ? "bg-blue-600" : "bg-slate-300"
-                  }`} />
-                  <span className="truncate">{b.title}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
+          {myBookIds.length === 0 ? (
+            <p className="text-xs text-slate-400 leading-relaxed">
+              담은 교재가 없습니다.<br />
+              <Link href="/textbooks" className="text-blue-500 hover:underline">교재 페이지</Link>에서 추가하세요.
+            </p>
+          ) : (
+            <ul className="space-y-1">
+              {myBookIds.map((id) => {
+                const b = BOOK_CATALOG[id];
+                if (!b) return null;
+                return (
+                  <li key={id} className="flex items-center gap-1 group/item">
+                    <button
+                      onClick={() => setSelectedId(id)}
+                      className={`flex-1 min-w-0 text-left flex items-center gap-2 px-2.5 py-2 rounded-lg transition-all text-sm ${
+                        selectedId === id
+                          ? "text-blue-700 font-semibold"
+                          : "text-slate-600 hover:text-slate-800"
+                      }`}
+                    >
+                      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                        selectedId === id ? "bg-blue-600" : "bg-slate-300"
+                      }`} />
+                      <span className="truncate">{b.title}</span>
+                    </button>
+                    <button
+                      onClick={() => removeBook(id)}
+                      className="shrink-0 w-5 h-5 flex items-center justify-center rounded-full text-slate-300 hover:text-white hover:bg-red-400 transition-all opacity-0 group-hover/item:opacity-100 text-xs"
+                      title="마이클래스에서 제거"
+                    >
+                      ✕
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
 
           {/* 교재 추가하기 */}
           <Link
@@ -322,6 +353,21 @@ export default function MyClassClient() {
           <h1 className="text-3xl font-black text-slate-800">마이클래스</h1>
           <p className="text-slate-500 text-base mt-1">교재를 담으면 기능을 바로 이용할 수 있어요.</p>
         </div>
+
+        {/* 빈 상태 */}
+        {!book && (
+          <div className="flex flex-col items-center justify-center py-24 text-center gap-4">
+            <span className="text-6xl">📚</span>
+            <p className="text-lg font-bold text-slate-600">담은 교재가 없습니다</p>
+            <p className="text-sm text-slate-400">교재 페이지에서 마이클래스 담기를 눌러 추가해보세요.</p>
+            <Link href="/textbooks" className="mt-2 px-6 py-2.5 bg-[#1B3A6B] hover:bg-[#163060] text-white text-sm font-bold rounded-xl transition-colors">
+              교재 보러 가기
+            </Link>
+          </div>
+        )}
+
+        {/* 교재가 있을 때만 렌더링 */}
+        {book && (<>
 
         {/* ── 교재 카드 ── */}
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-7 mb-5">
@@ -511,6 +557,7 @@ export default function MyClassClient() {
           </ul>
         </div>
 
+        </>)}
       </main>
     </div>
 

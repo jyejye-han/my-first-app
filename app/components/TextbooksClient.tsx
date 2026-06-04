@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { useMyClassBooks } from "../lib/useMyClassBooks";
 
 type Book = {
   id: string;
@@ -178,7 +179,7 @@ function FilterPanel({
 
 export default function TextbooksClient() {
   const searchParams = useSearchParams();
-  const [pinned, setPinned] = useState<string[]>([]);
+  const { ids: pinned, addBook, removeBook, hasBook } = useMyClassBooks();
   const [query, setQuery] = useState(searchParams.get("q") ?? "");
   const [filterOpen, setFilterOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<LevelTab>("전체");
@@ -193,14 +194,13 @@ export default function TextbooksClient() {
   const [showGuide, setShowGuide] = useState(false);
 
   const togglePin = (id: string) => {
-    setPinned((prev) => {
-      const isAdding = !prev.includes(id);
-      if (isAdding) {
-        setShowGuide(true);
-        setTimeout(() => setShowGuide(false), 4000);
-      }
-      return isAdding ? [...prev, id] : prev.filter((x) => x !== id);
-    });
+    if (hasBook(id)) {
+      removeBook(id);
+    } else {
+      addBook(id);
+      setShowGuide(true);
+      setTimeout(() => setShowGuide(false), 4000);
+    }
   };
 
   const toggleDetail = (v: string) => {
