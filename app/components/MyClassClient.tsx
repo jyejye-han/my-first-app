@@ -259,12 +259,12 @@ export default function MyClassClient() {
     <div className="flex min-h-[calc(100vh-64px)] bg-slate-50">
 
       {/* ── 왼쪽 사이드바 ── */}
-      <aside className="w-52 shrink-0 bg-white border-r border-slate-200 flex flex-col">
+      <aside className="w-60 shrink-0 bg-white border-r border-slate-200 flex flex-col">
         {/* 헤더 */}
-        <div className="px-5 pt-6 pb-4">
-          <div className="flex items-center gap-2 mb-5">
-            <span className="text-xl">🐾</span>
-            <h2 className="font-black text-slate-800 text-base">마이클래스</h2>
+        <div className="px-6 pt-7 pb-5">
+          <div className="flex items-center gap-2.5 mb-6">
+            <span className="text-2xl">🐾</span>
+            <h2 className="font-black text-slate-800 text-lg">마이클래스</h2>
           </div>
 
           {/* 교재 목록 */}
@@ -273,7 +273,7 @@ export default function MyClassClient() {
               <li key={b.id}>
                 <button
                   onClick={() => setSelectedId(b.id)}
-                  className={`w-full text-left flex items-center gap-2 px-2 py-1.5 rounded-lg transition-all text-sm ${
+                  className={`w-full text-left flex items-center gap-2 px-2.5 py-2 rounded-lg transition-all text-sm ${
                     selectedId === b.id
                       ? "text-blue-700 font-semibold"
                       : "text-slate-600 hover:text-slate-800"
@@ -291,9 +291,9 @@ export default function MyClassClient() {
           {/* 교재 추가하기 */}
           <Link
             href="/textbooks"
-            className="mt-5 flex items-center justify-center gap-1.5 w-full py-2.5 bg-slate-900 hover:bg-slate-700 text-white rounded-xl text-xs font-bold transition-colors"
+            className="mt-6 flex items-center justify-center gap-1.5 w-full py-3 bg-slate-900 hover:bg-slate-700 text-white rounded-xl text-sm font-bold transition-colors"
           >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
             </svg>
             교재 추가하기
@@ -301,12 +301,12 @@ export default function MyClassClient() {
         </div>
 
         {/* 하단 My Page */}
-        <div className="mt-auto border-t border-slate-100 px-4 py-4">
+        <div className="mt-auto border-t border-slate-100 px-5 py-5">
           <Link
             href="/my-page"
-            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-semibold text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-all"
+            className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-semibold text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-all"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
             My Page
@@ -315,37 +315,37 @@ export default function MyClassClient() {
       </aside>
 
       {/* ── 메인 콘텐츠 ── */}
-      <main className="flex-1 min-w-0 px-8 py-8 pr-52">
+      <main className="flex-1 min-w-0 px-9 py-9 pr-56">
 
         {/* 페이지 타이틀 */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-black text-slate-800">마이클래스</h1>
-          <p className="text-slate-500 text-sm mt-1">교재를 담으면 기능을 바로 이용할 수 있어요.</p>
+        <div className="mb-7">
+          <h1 className="text-3xl font-black text-slate-800">마이클래스</h1>
+          <p className="text-slate-500 text-base mt-1">교재를 담으면 기능을 바로 이용할 수 있어요.</p>
         </div>
 
         {/* ── 교재 카드 ── */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 mb-4">
-          <div className="flex gap-6">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-7 mb-5">
+          <div className="flex gap-7">
 
             {/* 표지 + 자료 다운로드 버튼 */}
-            <div className="shrink-0 flex flex-col gap-2.5">
+            <div className="shrink-0 flex flex-col gap-3">
               {book.image ? (
                 <img
                   src={book.image}
                   alt={book.title}
-                  className="w-24 h-32 object-cover rounded-xl shadow-md border border-slate-100"
+                  className="w-28 h-36 object-cover rounded-xl shadow-md border border-slate-100"
                 />
               ) : (
-                <div className="w-24 h-32 bg-gradient-to-br from-blue-100 to-indigo-200 rounded-xl flex items-center justify-center text-5xl shadow-md">
+                <div className="w-28 h-36 bg-gradient-to-br from-blue-100 to-indigo-200 rounded-xl flex items-center justify-center text-5xl shadow-md">
                   {book.emoji}
                 </div>
               )}
               {/* 자료 다운로드 버튼 — 썸네일 아래 full width */}
               <button
                 onClick={() => setDownloadPopup(true)}
-                className="w-24 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-[#1B3A6B] hover:bg-[#163060] text-white text-[11px] font-bold transition-all shadow-sm hover:shadow-md"
+                className="w-28 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-[#1B3A6B] hover:bg-[#163060] text-white text-xs font-bold transition-all shadow-sm hover:shadow-md"
               >
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
                 자료 다운로드
@@ -354,21 +354,21 @@ export default function MyClassClient() {
 
             {/* 정보 + 서비스 버튼 */}
             <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between gap-4 mb-4">
+              <div className="flex items-start justify-between gap-4 mb-5">
                 <div>
-                  <h2 className="font-black text-slate-800 text-lg leading-tight">{book.title}</h2>
-                  <p className="text-sm text-slate-500 mt-0.5">{book.author}</p>
+                  <h2 className="font-black text-slate-800 text-xl leading-tight">{book.title}</h2>
+                  <p className="text-base text-slate-500 mt-0.5">{book.author}</p>
                 </div>
               </div>
 
               {/* 서비스 버튼 */}
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-3 gap-2.5">
                 {TOOLS.map((tool) => {
-                  const cls = `flex items-center gap-2 px-3 py-2.5 rounded-xl border-2 ${tool.border} bg-white transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 duration-150`;
+                  const cls = `flex items-center gap-2.5 px-4 py-3 rounded-xl border-2 ${tool.border} bg-white transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 duration-150`;
                   const inner = (
                     <>
                       <span className={`shrink-0 ${tool.color}`}>{tool.icon}</span>
-                      <span className={`text-[11px] font-bold leading-tight ${tool.color}`}>{tool.label}</span>
+                      <span className={`text-xs font-bold leading-tight ${tool.color}`}>{tool.label}</span>
                     </>
                   );
                   if (tool.href === "__online__") {
@@ -392,23 +392,23 @@ export default function MyClassClient() {
         </div>
 
         {/* ── 학급학생관리 (가로 한 줄) ── */}
-        <div className="rounded-2xl border border-[#1B3A6B]/20 overflow-hidden shadow-sm mb-4">
-          <div className="flex items-center gap-4 px-5 py-3 bg-[#1B3A6B]">
+        <div className="rounded-2xl border border-[#1B3A6B]/20 overflow-hidden shadow-sm mb-5">
+          <div className="flex items-center gap-5 px-6 py-3.5 bg-[#1B3A6B]">
             {/* 타이틀 */}
-            <div className="flex items-center gap-2 shrink-0">
-              <svg className="w-4 h-4 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="flex items-center gap-2.5 shrink-0">
+              <svg className="w-5 h-5 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
-              <span className="text-white font-bold text-sm">학급학생관리</span>
+              <span className="text-white font-bold text-base">학급학생관리</span>
             </div>
-            <div className="w-px h-4 bg-white/20" />
+            <div className="w-px h-5 bg-white/20" />
             {/* 버튼 두 개 */}
-            <div className="flex gap-2">
+            <div className="flex gap-2.5">
               <button
                 onClick={() => setClassManagePopup(true)}
-                className="flex items-center gap-1.5 px-4 py-1.5 bg-white/10 hover:bg-white text-white hover:text-[#1B3A6B] text-xs font-semibold rounded-lg transition-all border border-white/20 hover:border-white"
+                className="flex items-center gap-1.5 px-5 py-2 bg-white/10 hover:bg-white text-white hover:text-[#1B3A6B] text-sm font-semibold rounded-lg transition-all border border-white/20 hover:border-white"
               >
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
@@ -416,9 +416,9 @@ export default function MyClassClient() {
               </button>
               <button
                 onClick={() => setMessagePopup(true)}
-                className="flex items-center gap-1.5 px-4 py-1.5 bg-white/10 hover:bg-white text-white hover:text-[#1B3A6B] text-xs font-semibold rounded-lg transition-all border border-white/20 hover:border-white"
+                className="flex items-center gap-1.5 px-5 py-2 bg-white/10 hover:bg-white text-white hover:text-[#1B3A6B] text-sm font-semibold rounded-lg transition-all border border-white/20 hover:border-white"
               >
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                 </svg>
                 메시지 보내기
@@ -429,12 +429,12 @@ export default function MyClassClient() {
 
         {/* ── 목차 ── */}
         <div className="rounded-2xl border border-[#1B3A6B]/20 overflow-hidden shadow-sm">
-          <div className="flex items-center gap-2 px-5 py-3 bg-[#1B3A6B]">
-            <svg className="w-4 h-4 text-blue-200 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="flex items-center gap-2.5 px-6 py-3.5 bg-[#1B3A6B]">
+            <svg className="w-5 h-5 text-blue-200 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h7" />
             </svg>
-            <span className="text-white font-bold text-sm">목차</span>
-            <span className="ml-auto text-blue-300 text-xs">{book.toc.length}단원</span>
+            <span className="text-white font-bold text-base">목차</span>
+            <span className="ml-auto text-blue-300 text-sm">{book.toc.length}단원</span>
           </div>
           <ul className="divide-y divide-slate-100 bg-white">
             {book.toc.map((lesson, i) => {
@@ -442,20 +442,20 @@ export default function MyClassClient() {
               return (
                 <li key={i}>
                   {/* 레슨 헤더 행 */}
-                  <div className={`flex items-center gap-3 px-4 py-3 ${isOpen ? "bg-slate-50" : "bg-white hover:bg-slate-50"} transition-colors`}>
+                  <div className={`flex items-center gap-4 px-5 py-3.5 ${isOpen ? "bg-slate-50" : "bg-white hover:bg-slate-50"} transition-colors`}>
                     {/* 번호 뱃지 */}
-                    <span className="w-7 h-7 rounded-full bg-[#1B3A6B] text-white flex items-center justify-center text-[11px] font-black shrink-0">
+                    <span className="w-8 h-8 rounded-full bg-[#1B3A6B] text-white flex items-center justify-center text-xs font-black shrink-0">
                       {String(i + 1).padStart(2, "0")}
                     </span>
                     {/* 레슨 제목 */}
-                    <span className="flex-1 text-sm font-bold text-slate-800 truncate">{lesson.title}</span>
+                    <span className="flex-1 text-base font-bold text-slate-800 truncate">{lesson.title}</span>
                     {/* 액션 버튼 */}
-                    <div className="flex items-center gap-1.5 shrink-0">
+                    <div className="flex items-center gap-2 shrink-0">
                       <button
                         onClick={() => setViewPopup({ index: i, title: lesson.title })}
-                        className="flex items-center gap-1 px-2.5 py-1 text-[10px] font-semibold text-slate-600 border border-slate-200 bg-white rounded-lg hover:bg-slate-100 hover:border-slate-300 transition-all whitespace-nowrap"
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-600 border border-slate-200 bg-white rounded-lg hover:bg-slate-100 hover:border-slate-300 transition-all whitespace-nowrap"
                       >
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                         </svg>
                         단원 자료 보기
@@ -463,14 +463,14 @@ export default function MyClassClient() {
                       {/* 펼침 버튼 */}
                       <button
                         onClick={() => toggleLesson(i)}
-                        className={`w-7 h-7 flex items-center justify-center rounded-lg border transition-all ${
+                        className={`w-8 h-8 flex items-center justify-center rounded-lg border transition-all ${
                           isOpen
                             ? "bg-[#1B3A6B] border-[#1B3A6B] text-white"
                             : "border-slate-200 bg-white text-slate-500 hover:border-[#1B3A6B] hover:text-[#1B3A6B]"
                         }`}
                       >
                         <svg
-                          className={`w-3.5 h-3.5 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+                          className={`w-4 h-4 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
                           fill="none" stroke="currentColor" viewBox="0 0 24 24"
                         >
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
@@ -483,19 +483,19 @@ export default function MyClassClient() {
                   {isOpen && (
                     <ul className="bg-slate-50/70 border-t border-slate-100">
                       {lesson.subItems.map((sub, j) => (
-                        <li key={j} className="flex items-center gap-3 pl-8 pr-4 py-2.5 border-b border-slate-100 last:border-0 hover:bg-blue-50/40 transition-colors group">
+                        <li key={j} className="flex items-center gap-4 pl-10 pr-5 py-3 border-b border-slate-100 last:border-0 hover:bg-blue-50/40 transition-colors group">
                           {/* 왼쪽 세로선 + 들여쓰기 */}
-                          <div className="w-px h-7 bg-slate-300 shrink-0 rounded-full" />
+                          <div className="w-px h-8 bg-slate-300 shrink-0 rounded-full" />
                           {/* 차시 내용 */}
                           <div className="flex-1 min-w-0">
-                            <span className="text-xs font-semibold text-slate-700 group-hover:text-slate-900 block truncate">{sub.label}</span>
-                            <span className="text-[10px] text-slate-400">{sub.pages}</span>
+                            <span className="text-sm font-semibold text-slate-700 group-hover:text-slate-900 block truncate">{sub.label}</span>
+                            <span className="text-xs text-slate-400">{sub.pages}</span>
                           </div>
                           {/* 동그란 버튼 */}
                           <div className="flex items-center gap-2 shrink-0">
                             <button
                               onClick={() => setLessonPreviewPopup(true)}
-                              className="w-11 h-11 rounded-full bg-teal-500 hover:bg-teal-600 text-white text-[9px] font-bold leading-tight flex items-center justify-center text-center transition-colors shadow-sm"
+                              className="w-12 h-12 rounded-full bg-teal-500 hover:bg-teal-600 text-white text-[10px] font-bold leading-tight flex items-center justify-center text-center transition-colors shadow-sm"
                             >
                               수업안<br/>만들기
                             </button>
