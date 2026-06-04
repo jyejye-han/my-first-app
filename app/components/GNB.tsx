@@ -82,15 +82,17 @@ export default function GNB() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-end h-8 gap-3">
             {/* YBM북스 바로가기 */}
-            <button
-              onClick={() => setYbmbooksPopup(true)}
+            <a
+              href="https://miracle03945-eng.github.io/booksam/v2/"
+              target="_blank"
+              rel="noopener noreferrer"
               className="flex items-center gap-1 text-[11px] font-medium text-amber-700 hover:text-amber-900 transition-colors"
             >
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
               </svg>
               YBM북스-초중고
-            </button>
+            </a>
             <span className="w-px h-3 bg-slate-300" />
             <Link
               href="/login"
