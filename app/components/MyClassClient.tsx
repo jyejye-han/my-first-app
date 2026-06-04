@@ -491,15 +491,16 @@ export default function MyClassClient() {
                             <span className="text-sm font-semibold text-slate-700 group-hover:text-slate-900 block truncate">{sub.label}</span>
                             <span className="text-xs text-slate-400">{sub.pages}</span>
                           </div>
-                          {/* 동그란 버튼 */}
-                          <div className="flex items-center gap-2 shrink-0">
-                            <button
-                              onClick={() => setLessonPreviewPopup(true)}
-                              className="w-12 h-12 rounded-full bg-teal-500 hover:bg-teal-600 text-white text-[10px] font-bold leading-tight flex items-center justify-center text-center transition-colors shadow-sm"
-                            >
-                              수업안<br/>만들기
-                            </button>
-                          </div>
+                          {/* 수업안 만들기 버튼 */}
+                          <button
+                            onClick={() => setLessonPreviewPopup(true)}
+                            className="flex items-center gap-2 px-5 py-2.5 bg-teal-500 hover:bg-teal-600 text-white text-sm font-bold rounded-xl transition-colors shadow-sm whitespace-nowrap mr-2"
+                          >
+                            <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                            수업안 만들기
+                          </button>
                         </li>
                       ))}
                     </ul>
