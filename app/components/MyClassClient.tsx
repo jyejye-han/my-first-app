@@ -21,16 +21,44 @@ const MY_BOOKS = [
     image: "/images/books/reading-prime-1.jpg",
     publishDate: "2025.03",
     toc: [
-      "Lesson 1 Hello! I'm Dito",
-      "Lesson 2 Sit Down, Please",
-      "Lesson 3 What's This?",
-      "Special Link 1",
-      "Lesson 4 I Like Pizza",
-      "Lesson 5 I Can Swim!",
-      "Special Link 2",
-      "Lesson 6 It's Sunny Today",
-      "Lesson 7 Let's Go to the Park",
-      "Lesson 8 Where Is My Cap?",
+      { title: "Lesson 1 Hello! I'm Dito", subItems: [
+        { label: "[1~2차시] Study Points ~ Listen & Speak", pages: "pp. 4~9" },
+        { label: "[3차시] Let's Communicate", pages: "pp. 10~11" },
+      ]},
+      { title: "Lesson 2 Sit Down, Please", subItems: [
+        { label: "[1~2차시] Grammar Points ~ Practice", pages: "pp. 12~17" },
+        { label: "[3차시] Real Talk", pages: "pp. 18~19" },
+      ]},
+      { title: "Lesson 3 What's This?", subItems: [
+        { label: "[1~2차시] Grammar Points ~ Practice", pages: "pp. 20~25" },
+        { label: "[3차시] Real Talk", pages: "pp. 26~27" },
+      ]},
+      { title: "Special Link 1", subItems: [
+        { label: "[1차시] 종합 정리 및 평가", pages: "pp. 28~31" },
+      ]},
+      { title: "Lesson 4 I Like Pizza", subItems: [
+        { label: "[1~2차시] Grammar Points ~ Practice", pages: "pp. 32~37" },
+        { label: "[3차시] Real Talk", pages: "pp. 38~39" },
+      ]},
+      { title: "Lesson 5 I Can Swim!", subItems: [
+        { label: "[1~2차시] Grammar Points ~ Practice", pages: "pp. 40~45" },
+        { label: "[3차시] Real Talk", pages: "pp. 46~47" },
+      ]},
+      { title: "Special Link 2", subItems: [
+        { label: "[1차시] 종합 정리 및 평가", pages: "pp. 48~51" },
+      ]},
+      { title: "Lesson 6 It's Sunny Today", subItems: [
+        { label: "[1~2차시] Grammar Points ~ Practice", pages: "pp. 52~57" },
+        { label: "[3차시] Real Talk", pages: "pp. 58~59" },
+      ]},
+      { title: "Lesson 7 Let's Go to the Park", subItems: [
+        { label: "[1~2차시] Grammar Points ~ Practice", pages: "pp. 60~65" },
+        { label: "[3차시] Real Talk", pages: "pp. 66~67" },
+      ]},
+      { title: "Lesson 8 Where Is My Cap?", subItems: [
+        { label: "[1~2차시] Grammar Points ~ Practice", pages: "pp. 68~73" },
+        { label: "[3차시] Real Talk", pages: "pp. 74~75" },
+      ]},
     ],
   },
   {
@@ -43,12 +71,30 @@ const MY_BOOKS = [
     image: "/images/books/reading-prime-2.jpg",
     publishDate: "2025.01",
     toc: [
-      "Unit 1 - Daily Life",
-      "Unit 2 - Nature & Environment",
-      "Unit 3 - Science & Technology",
-      "Unit 4 - Culture & Arts",
-      "Unit 5 - People & Society",
-      "Unit 6 - Review & Assessment",
+      { title: "Unit 1 - Daily Life", subItems: [
+        { label: "[1~2차시] Reading Comprehension", pages: "pp. 8~13" },
+        { label: "[3차시] Writing & Review", pages: "pp. 14~15" },
+      ]},
+      { title: "Unit 2 - Nature & Environment", subItems: [
+        { label: "[1~2차시] Reading Comprehension", pages: "pp. 16~21" },
+        { label: "[3차시] Writing & Review", pages: "pp. 22~23" },
+      ]},
+      { title: "Unit 3 - Science & Technology", subItems: [
+        { label: "[1~2차시] Reading Comprehension", pages: "pp. 24~29" },
+        { label: "[3차시] Writing & Review", pages: "pp. 30~31" },
+      ]},
+      { title: "Unit 4 - Culture & Arts", subItems: [
+        { label: "[1~2차시] Reading Comprehension", pages: "pp. 32~37" },
+        { label: "[3차시] Writing & Review", pages: "pp. 38~39" },
+      ]},
+      { title: "Unit 5 - People & Society", subItems: [
+        { label: "[1~2차시] Reading Comprehension", pages: "pp. 40~45" },
+        { label: "[3차시] Writing & Review", pages: "pp. 46~47" },
+      ]},
+      { title: "Unit 6 - Review & Assessment", subItems: [
+        { label: "[1~2차시] 종합 독해 연습", pages: "pp. 48~53" },
+        { label: "[3차시] 최종 평가", pages: "pp. 54~55" },
+      ]},
     ],
   },
   {
@@ -61,12 +107,30 @@ const MY_BOOKS = [
     image: "/images/books/phonics-now-1.jpg",
     publishDate: "2024.09",
     toc: [
-      "1장 - 명사와 관사",
-      "2장 - 대명사",
-      "3장 - 동사의 종류",
-      "4장 - 시제 기초",
-      "5장 - 형용사와 부사",
-      "6장 - 전치사",
+      { title: "1장 - 명사와 관사", subItems: [
+        { label: "[1~2차시] 개념 학습 ~ 기초 연습", pages: "pp. 6~11" },
+        { label: "[3차시] 실전 문제풀이", pages: "pp. 12~13" },
+      ]},
+      { title: "2장 - 대명사", subItems: [
+        { label: "[1~2차시] 개념 학습 ~ 기초 연습", pages: "pp. 14~19" },
+        { label: "[3차시] 실전 문제풀이", pages: "pp. 20~21" },
+      ]},
+      { title: "3장 - 동사의 종류", subItems: [
+        { label: "[1~2차시] 개념 학습 ~ 기초 연습", pages: "pp. 22~27" },
+        { label: "[3차시] 실전 문제풀이", pages: "pp. 28~29" },
+      ]},
+      { title: "4장 - 시제 기초", subItems: [
+        { label: "[1~2차시] 개념 학습 ~ 기초 연습", pages: "pp. 30~35" },
+        { label: "[3차시] 실전 문제풀이", pages: "pp. 36~37" },
+      ]},
+      { title: "5장 - 형용사와 부사", subItems: [
+        { label: "[1~2차시] 개념 학습 ~ 기초 연습", pages: "pp. 38~43" },
+        { label: "[3차시] 실전 문제풀이", pages: "pp. 44~45" },
+      ]},
+      { title: "6장 - 전치사", subItems: [
+        { label: "[1~2차시] 개념 학습 ~ 기초 연습", pages: "pp. 46~51" },
+        { label: "[3차시] 실전 문제풀이", pages: "pp. 52~53" },
+      ]},
     ],
   },
 ];
@@ -180,14 +244,14 @@ export default function MyClassClient() {
   // 자료 보기 팝업 (레슨별)
   const [viewPopup, setViewPopup] = useState<{ index: number; title: string } | null>(null);
 
-  const toggleMaterial = (id: string) =>
-    setCheckedMaterials((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
-
-  const openPopup = (index: number, title: string) => {
-    setCheckedMaterials(["ppt", "text"]);
-    setLessonPopup({ index, title });
+  // 목차 펼침 상태 (첫 번째 레슨 기본 오픈)
+  const [expandedLessons, setExpandedLessons] = useState<Set<number>>(new Set([0]));
+  const toggleLesson = (i: number) => {
+    setExpandedLessons(prev => {
+      const next = new Set(prev);
+      if (next.has(i)) next.delete(i); else next.add(i);
+      return next;
+    });
   };
 
   return (
@@ -372,29 +436,77 @@ export default function MyClassClient() {
             <span className="text-white font-bold text-sm">목차</span>
             <span className="ml-auto text-blue-300 text-xs">{book.toc.length}단원</span>
           </div>
-          <ul className="divide-y divide-slate-100 bg-slate-50">
-            {book.toc.map((item, i) => (
-              <li key={i} className="flex items-center gap-3 px-5 py-2.5 hover:bg-blue-50 transition-colors group">
-                <span className="w-6 h-6 rounded-full bg-[#1B3A6B]/10 text-[#1B3A6B] flex items-center justify-center text-[10px] font-black shrink-0 group-hover:bg-[#1B3A6B] group-hover:text-white transition-colors">
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-                <span className="flex-1 text-sm text-slate-700 font-medium">{item}</span>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <button
-                    onClick={() => setViewPopup({ index: i, title: item })}
-                    className="px-2.5 py-1 text-[11px] font-semibold text-[#1B3A6B] border border-[#1B3A6B]/25 bg-white rounded-lg hover:bg-[#1B3A6B] hover:text-white hover:border-[#1B3A6B] transition-all"
-                  >
-                    자료 보기
-                  </button>
-                  <button
-                    onClick={() => setLessonPreviewPopup(true)}
-                    className="px-2.5 py-1 text-[11px] font-semibold text-white bg-[#1B3A6B] border border-[#1B3A6B] rounded-lg hover:bg-[#163060] transition-all"
-                  >
-                    내 수업안 만들기
-                  </button>
-                </div>
-              </li>
-            ))}
+          <ul className="divide-y divide-slate-100 bg-white">
+            {book.toc.map((lesson, i) => {
+              const isOpen = expandedLessons.has(i);
+              return (
+                <li key={i}>
+                  {/* 레슨 헤더 행 */}
+                  <div className={`flex items-center gap-3 px-4 py-3 ${isOpen ? "bg-slate-50" : "bg-white hover:bg-slate-50"} transition-colors`}>
+                    {/* 번호 뱃지 */}
+                    <span className="w-7 h-7 rounded-full bg-[#1B3A6B] text-white flex items-center justify-center text-[11px] font-black shrink-0">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    {/* 레슨 제목 */}
+                    <span className="flex-1 text-sm font-bold text-slate-800 truncate">{lesson.title}</span>
+                    {/* 액션 버튼 */}
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        onClick={() => setViewPopup({ index: i, title: lesson.title })}
+                        className="flex items-center gap-1 px-2.5 py-1 text-[10px] font-semibold text-slate-600 border border-slate-200 bg-white rounded-lg hover:bg-slate-100 hover:border-slate-300 transition-all whitespace-nowrap"
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        단원 자료 보기
+                      </button>
+                      {/* 펼침 버튼 */}
+                      <button
+                        onClick={() => toggleLesson(i)}
+                        className={`w-7 h-7 flex items-center justify-center rounded-lg border transition-all ${
+                          isOpen
+                            ? "bg-[#1B3A6B] border-[#1B3A6B] text-white"
+                            : "border-slate-200 bg-white text-slate-500 hover:border-[#1B3A6B] hover:text-[#1B3A6B]"
+                        }`}
+                      >
+                        <svg
+                          className={`w-3.5 h-3.5 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+                          fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 하위 차시 목록 */}
+                  {isOpen && (
+                    <ul className="bg-slate-50/70 border-t border-slate-100">
+                      {lesson.subItems.map((sub, j) => (
+                        <li key={j} className="flex items-center gap-3 pl-8 pr-4 py-2.5 border-b border-slate-100 last:border-0 hover:bg-blue-50/40 transition-colors group">
+                          {/* 왼쪽 세로선 + 들여쓰기 */}
+                          <div className="w-px h-7 bg-slate-300 shrink-0 rounded-full" />
+                          {/* 차시 내용 */}
+                          <div className="flex-1 min-w-0">
+                            <span className="text-xs font-semibold text-slate-700 group-hover:text-slate-900 block truncate">{sub.label}</span>
+                            <span className="text-[10px] text-slate-400">{sub.pages}</span>
+                          </div>
+                          {/* 동그란 버튼 */}
+                          <div className="flex items-center gap-2 shrink-0">
+                            <button
+                              onClick={() => setLessonPreviewPopup(true)}
+                              className="w-11 h-11 rounded-full bg-teal-500 hover:bg-teal-600 text-white text-[9px] font-bold leading-tight flex items-center justify-center text-center transition-colors shadow-sm"
+                            >
+                              수업안<br/>만들기
+                            </button>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         </div>
 

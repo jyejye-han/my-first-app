@@ -75,9 +75,76 @@ export default function GNB() {
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
 
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
+    <header className="sticky top-0 z-50 shadow-sm">
+
+      {/* ── 상단 유틸리티 바 ── */}
+      <div className="bg-slate-100 border-b border-slate-200 hidden md:block">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-end h-8 gap-3">
+            {/* YBM북스 바로가기 */}
+            <button
+              onClick={() => setYbmbooksPopup(true)}
+              className="flex items-center gap-1 text-[11px] font-medium text-amber-700 hover:text-amber-900 transition-colors"
+            >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+              YBM북스-초중고
+            </button>
+            <span className="w-px h-3 bg-slate-300" />
+            <Link
+              href="/login"
+              className="flex items-center gap-1 text-[11px] font-medium text-slate-500 hover:text-blue-700 transition-colors"
+            >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              로그인
+            </Link>
+            <span className="w-px h-3 bg-slate-300" />
+            {/* 고객센터 드롭다운 */}
+            <div className="relative group">
+              <button className="flex items-center gap-1 text-[11px] font-medium text-slate-500 hover:text-blue-700 transition-colors">
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+                고객센터
+                <svg className="w-2.5 h-2.5 transition-transform duration-150 group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              <div className="absolute right-0 top-full pt-1 hidden group-hover:block z-50">
+                <div className="w-40 bg-white rounded-xl shadow-xl border border-slate-100 py-2">
+                  {SUPPORT_MENU.map((item) =>
+                    item.href === "__issuetalk__" ? (
+                      <button
+                        key={item.href}
+                        onClick={() => setIssuetalkPopup(true)}
+                        className="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition-colors text-left"
+                      >
+                        <span>{item.icon}</span>{item.label}
+                      </button>
+                    ) : (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                      >
+                        <span>{item.icon}</span>{item.label}
+                      </Link>
+                    )
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── 메인 GNB ── */}
+      <div className="bg-white border-b border-slate-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="relative flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 shrink-0">
             <div className="bg-[#1B3A6B] text-white font-black px-3 py-1.5 rounded-lg text-xl tracking-tighter select-none">
@@ -87,7 +154,7 @@ export default function GNB() {
           </Link>
 
           {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-0.5">
+          <nav className="hidden md:flex items-center gap-0.5 absolute left-1/2 -translate-x-1/2">
             {NAV.map((item) => (
               <div
                 key={item.id}
@@ -143,69 +210,6 @@ export default function GNB() {
             ))}
           </nav>
 
-          {/* Right Actions */}
-          <div className="hidden md:flex items-center gap-2">
-            {/* YBM북스 바로가기 */}
-            <button
-              onClick={() => setYbmbooksPopup(true)}
-              className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-300 hover:border-amber-400 rounded-lg transition-all duration-150"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-              </svg>
-              YBM북스-초중고
-            </button>
-
-            <Link
-              href="/login"
-              className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-600 hover:text-blue-700 border border-slate-300 hover:border-blue-300 rounded-lg transition-all duration-150"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-              로그인
-            </Link>
-
-            {/* 고객센터 — CSS group-hover로 안정적 고정 */}
-            <div className="relative group">
-              <button className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-white bg-[#1B3A6B] hover:bg-[#163060] rounded-lg transition-colors duration-150">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-                고객센터
-                <svg className="w-3 h-3 transition-transform duration-150 group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-
-              {/* pt-1로 버튼~드롭다운 사이 gap을 메워서 마우스가 떠나지 않게 */}
-              <div className="absolute right-0 top-full pt-1 hidden group-hover:block z-50">
-                <div className="w-44 bg-white rounded-xl shadow-xl border border-slate-100 py-2">
-                  {SUPPORT_MENU.map((item) =>
-                    item.href === "__issuetalk__" ? (
-                      <button
-                        key={item.href}
-                        onClick={() => setIssuetalkPopup(true)}
-                        className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition-colors text-left"
-                      >
-                        <span>{item.icon}</span>
-                        {item.label}
-                      </button>
-                    ) : (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition-colors"
-                      >
-                        <span>{item.icon}</span>
-                        {item.label}
-                      </Link>
-                    )
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
 
           {/* Mobile hamburger */}
           <button
@@ -220,6 +224,8 @@ export default function GNB() {
             </svg>
           </button>
         </div>
+      </div>
+
       </div>
 
       {/* Mobile Menu */}
