@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import { useMyMaterials } from "../../lib/useMyMaterials";
 
 /* ── 자료 유형 ── */
 const MATERIAL_TYPES = [
@@ -115,13 +116,22 @@ export default function AiMaterialPage() {
   const [count, setCount] = useState<string>("5");
   const [generated, setGenerated] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [saved,  setSaved]  = useState(false);
+  const { save: saveMaterial } = useMyMaterials();
 
   const canGenerate = schoolLevel && studentLevel;
 
   const lookupKey = `${schoolLevel}-${studentLevel}`;
 
   const handleGenerate = () => setGenerated(true);
-  const handleReset    = () => { setGenerated(false); setCopied(false); };
+  const handleReset    = () => { setGenerated(false); setCopied(false); setSaved(false); };
+
+  const handleSave = () => {
+    const typeLabel = MATERIAL_TYPES.find(t => t.id === matType)?.label ?? matType;
+    saveMaterial({ typeId: matType, typeLabel, schoolLevel, grade, studentLevel, topic, count });
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2500);
+  };
 
   const handleCopy = () => {
     setCopied(true);
@@ -464,6 +474,16 @@ export default function AiMaterialPage() {
                       <><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>복사됨</>
                     ) : (
                       <><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>복사</>
+                    )}
+                  </button>
+                  <button onClick={handleSave}
+                    className={`flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg transition-all ${
+                      saved ? "bg-teal-100 text-teal-700 border border-teal-300" : "bg-white border border-indigo-300 text-indigo-600 hover:bg-indigo-50"
+                    }`}>
+                    {saved ? (
+                      <><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>저장됨</>
+                    ) : (
+                      <><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg>저장</>
                     )}
                   </button>
                   <button className="flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 transition-colors">

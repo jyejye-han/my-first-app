@@ -396,6 +396,16 @@ export default function MyClassClient() {
                 </svg>
                 자료 다운로드
               </button>
+              {/* 내가 만든 자료 */}
+              <Link
+                href="/my-class/my-materials"
+                className="w-28 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 text-xs font-bold transition-all"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                </svg>
+                내가만든자료
+              </Link>
             </div>
 
             {/* 정보 + 서비스 버튼 */}
