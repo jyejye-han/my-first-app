@@ -36,6 +36,14 @@ const services = [
     href: "https://www.ybmcloud.com/connecting/content?siteType=E",
     isExt: true,
   },
+  {
+    id: "ai-material",
+    label: "AI 자료 생성",
+    desc: "학교급·학년·수준을 설정하면 어휘 학습지·독해 문제·형성평가 등 맞춤형 학습 자료를 AI가 즉시 생성합니다.",
+    href: "/edutech/ai-material",
+    isExt: false,
+    isNew: true,
+  },
 ];
 
 function ClassGameThumb() {
@@ -232,12 +240,50 @@ function ConnectingBookThumb() {
   );
 }
 
+function AiMaterialThumb() {
+  return (
+    <div className="relative overflow-hidden h-48 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500">
+      <div className="absolute -top-6 -right-6 w-36 h-36 bg-white/10 rounded-full" />
+      <div className="absolute -bottom-8 -left-8 w-28 h-28 bg-black/10 rounded-full" />
+      {/* 타이틀 */}
+      <div className="relative z-10 px-4 pt-4">
+        <div className="flex items-center gap-2 mb-0.5">
+          <span className="text-2xl">🤖</span>
+          <div>
+            <span className="text-white font-black text-xl">AI</span>
+            <span className="text-pink-200 font-black text-xl"> 자료생성</span>
+          </div>
+        </div>
+        <p className="text-indigo-200 text-[11px]">맞춤형 학습자료 즉시 생성</p>
+      </div>
+      {/* 자료 유형 칩 */}
+      <div className="relative z-10 flex flex-wrap gap-1.5 px-4 mt-3">
+        {["어휘 학습지","독해 문제","문법 문제","형성평가"].map((t, i) => (
+          <span key={t} className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${i === 0 ? "bg-white text-indigo-700" : "bg-white/20 text-white"}`}>{t}</span>
+        ))}
+      </div>
+      {/* 미니 미리보기 카드 */}
+      <div className="absolute bottom-3 right-3 w-28 bg-white/15 backdrop-blur-sm rounded-xl p-2.5 space-y-1.5">
+        {["어휘 학습지 ✓","독해 문제 ✓","빈칸 채우기"].map((t, i) => (
+          <div key={i} className={`flex items-center gap-1.5 text-[9px] font-semibold ${i < 2 ? "text-green-300" : "text-white/60"}`}>
+            <div className={`w-1.5 h-1.5 rounded-full ${i < 2 ? "bg-green-400" : "bg-white/30"}`} />
+            {t}
+          </div>
+        ))}
+      </div>
+      {/* NEW 뱃지 */}
+      <div className="absolute top-3 right-3 bg-red-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow">NEW</div>
+    </div>
+  );
+}
+
 const thumbMap: Record<string, ReactNode> = {
   "class-game": <ClassGameThumb />,
   "vocab-wizard": <VocabWizardThumb />,
   "quick-quiz": <QuickQuizThumb />,
   "ai-eval": <AiEvalThumb />,
   "connecting-book": <ConnectingBookThumb />,
+  "ai-material": <AiMaterialThumb />,
 };
 
 export default function EdutechPage() {

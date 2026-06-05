@@ -53,6 +53,7 @@ const NAV = [
       { label: "깜짝퀴즈", href: "https://school.ybmsmartschool.com/quiz/quiz_list?grd_cd=301002&sso_tag=4e89ae318b9ea3a9b6ab376912995b03" },
       { label: "AI평가", href: "/edutech/ai-eval" },
       { label: "커넥팅북", href: "https://www.ybmcloud.com/connecting/content?siteType=E" },
+      { label: "AI 자료 생성", href: "/edutech/ai-material", isNew: true },
     ],
   },
 ];
