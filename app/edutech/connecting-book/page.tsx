@@ -64,17 +64,16 @@ function ConnectingBookContent() {
               </div>
             </div>
             {/* 열기 버튼 */}
-            <a
-              href="https://www.ybmcloud.com/connecting/content?siteType=E"
-              target="_blank"
-              rel="noopener noreferrer"
+            <Link
+              href={`/edutech/connecting-book/viewer?bookId=${bookId}`}
               className="shrink-0 flex items-center gap-2 px-5 py-3 bg-teal-500 hover:bg-teal-600 text-white font-bold text-sm rounded-xl transition-colors shadow-sm"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               E-BOOK 열기
-            </a>
+            </Link>
           </div>
         </div>
       ) : (
@@ -89,14 +88,12 @@ function ConnectingBookContent() {
             <Link href="/my-class" className="px-4 py-2 bg-[#1B3A6B] hover:bg-[#163060] text-white text-sm font-bold rounded-xl transition-colors">
               마이클래스 가기
             </Link>
-            <a
-              href="https://www.ybmcloud.com/connecting/content?siteType=E"
-              target="_blank"
-              rel="noopener noreferrer"
+            <Link
+              href="/edutech/connecting-book/viewer"
               className="px-4 py-2 border border-teal-300 text-teal-600 hover:bg-teal-50 text-sm font-bold rounded-xl transition-colors"
             >
               E-BOOK 열기
-            </a>
+            </Link>
           </div>
         </div>
       )}

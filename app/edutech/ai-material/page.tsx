@@ -1,24 +1,71 @@
 "use client";
-import { useState } from "react";
+import { useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useMyMaterials } from "../../lib/useMyMaterials";
 
-/* ── 자료 유형 ── */
-const MATERIAL_TYPES = [
-  { id: "vocab",    label: "어휘 학습지",  icon: "📝", desc: "빈칸·영작·매칭 문제" },
-  { id: "reading",  label: "독해 문제",    icon: "📖", desc: "지문 + 이해 문제 세트" },
-  { id: "grammar",  label: "문법 문제",    icon: "📐", desc: "문법 포인트별 연습 문제" },
-  { id: "cloze",    label: "빈칸 채우기",  icon: "✏️", desc: "문맥 이해 빈칸 완성" },
-  { id: "formative",label: "형성평가",     icon: "📋", desc: "단원 마무리 평가지" },
-];
+/* ── 대카테고리 ── */
+const CATEGORIES = [
+  {
+    id: "quiz",
+    label: "AI 문제 만들기",
+    icon: "🧩",
+    desc: "독해·문법·형성평가 자동 출제",
+    color: { card: "border-indigo-300 bg-indigo-50", active: "border-indigo-500 bg-indigo-600", text: "text-indigo-700", badge: "bg-indigo-600" },
+    subs: [
+      { id: "reading",   label: "독해 문제",   icon: "📖", desc: "지문 + 이해 문제 세트" },
+      { id: "grammar",   label: "문법 문제",   icon: "📐", desc: "문법 포인트별 연습 문제" },
+      { id: "formative", label: "형성평가",    icon: "📋", desc: "단원 마무리 평가지" },
+      { id: "cloze",     label: "빈칸 채우기", icon: "✏️", desc: "문맥 이해 빈칸 완성" },
+    ],
+  },
+  {
+    id: "worksheet",
+    label: "워크시트",
+    icon: "📄",
+    desc: "인쇄용 맞춤 학습지 생성",
+    color: { card: "border-blue-300 bg-blue-50", active: "border-blue-500 bg-blue-600", text: "text-blue-700", badge: "bg-blue-600" },
+    subs: [
+      { id: "vocab",   label: "어휘 학습지",   icon: "📝", desc: "빈칸·영작·매칭 문제" },
+      { id: "grammar", label: "문법 워크시트", icon: "📐", desc: "규칙 설명 + 연습 문제" },
+      { id: "reading", label: "독해 워크시트", icon: "📖", desc: "지문 기반 활동 학습지" },
+    ],
+  },
+  {
+    id: "game",
+    label: "게임",
+    icon: "🎮",
+    desc: "학생 참여형 수업 게임 제작",
+    color: { card: "border-orange-300 bg-orange-50", active: "border-orange-500 bg-orange-600", text: "text-orange-700", badge: "bg-orange-600" },
+    subs: [
+      { id: "game-quiz",    label: "어휘 퀴즈",  icon: "❓", desc: "뜻 맞히기 객관식 게임" },
+      { id: "game-match",   label: "매칭 게임",  icon: "🔗", desc: "단어-뜻 짝 연결하기" },
+      { id: "game-bingo",   label: "단어 빙고",  icon: "🟩", desc: "5×5 빙고 카드 생성" },
+    ],
+  },
+  {
+    id: "vocab",
+    label: "어휘 만들기",
+    icon: "📝",
+    desc: "단어장·플래시카드·어휘 테스트",
+    color: { card: "border-emerald-300 bg-emerald-50", active: "border-emerald-500 bg-emerald-600", text: "text-emerald-700", badge: "bg-emerald-600" },
+    subs: [
+      { id: "vocab",      label: "단어장",       icon: "📗", desc: "어휘 + 뜻 + 예문 목록" },
+      { id: "flash",      label: "플래시카드",   icon: "🃏", desc: "앞·뒤 암기용 카드 형식" },
+      { id: "vocab-test", label: "어휘 테스트",  icon: "📋", desc: "단어 쪽지시험지 생성" },
+    ],
+  },
+] as const;
 
-/* ── 레벨별 샘플 생성 데이터 ── */
+type CategoryId = typeof CATEGORIES[number]["id"];
+
+/* ── 샘플 데이터 ── */
 const SAMPLE_VOCAB: Record<string, { words: { en: string; ko: string; ex: string }[] }> = {
   "초등-기초": { words: [
-    { en: "family",    ko: "가족",   ex: "My ___ is happy." },
-    { en: "school",    ko: "학교",   ex: "I go to ___ every day." },
-    { en: "friend",    ko: "친구",   ex: "She is my best ___." },
-    { en: "happy",     ko: "행복한", ex: "I feel ___ today." },
+    { en: "family",    ko: "가족",    ex: "My ___ is happy." },
+    { en: "school",    ko: "학교",    ex: "I go to ___ every day." },
+    { en: "friend",    ko: "친구",    ex: "She is my best ___." },
+    { en: "happy",     ko: "행복한",  ex: "I feel ___ today." },
     { en: "beautiful", ko: "아름다운", ex: "The flower is ___." },
   ]},
   "중등-기초": { words: [
@@ -29,11 +76,11 @@ const SAMPLE_VOCAB: Record<string, { words: { en: string; ko: string; ex: string
     { en: "evidence",   ko: "증거",    ex: "Where is the ___?" },
   ]},
   "중등-중급": { words: [
-    { en: "advocate",    ko: "옹호하다", ex: "They ___ for equal rights." },
-    { en: "comprehensive", ko: "포괄적인", ex: "This is a ___ guide." },
-    { en: "elaborate",   ko: "정교한",  ex: "She gave an ___ plan." },
-    { en: "fundamental", ko: "근본적인", ex: "This is a ___ problem." },
-    { en: "innovative",  ko: "혁신적인", ex: "He is an ___ thinker." },
+    { en: "advocate",      ko: "옹호하다",  ex: "They ___ for equal rights." },
+    { en: "comprehensive", ko: "포괄적인",  ex: "This is a ___ guide." },
+    { en: "elaborate",     ko: "정교한",    ex: "She gave an ___ plan." },
+    { en: "fundamental",   ko: "근본적인",  ex: "This is a ___ problem." },
+    { en: "innovative",    ko: "혁신적인",  ex: "He is an ___ thinker." },
   ]},
   "고등-중급": { words: [
     { en: "ambiguous",   ko: "모호한",   ex: "The message was ___." },
@@ -43,11 +90,11 @@ const SAMPLE_VOCAB: Record<string, { words: { en: string; ko: string; ex: string
     { en: "paradox",     ko: "역설",     ex: "It's an interesting ___." },
   ]},
   "고등-고급": { words: [
-    { en: "ostensible",  ko: "표면상의", ex: "The ___ reason was clear." },
-    { en: "pervasive",   ko: "만연한",   ex: "Fear became ___." },
-    { en: "recalcitrant",ko: "반항적인", ex: "He was a ___ student." },
-    { en: "tenacious",   ko: "끈질긴",   ex: "She was ___ in her effort." },
-    { en: "vicarious",   ko: "대리의",   ex: "She felt ___ joy." },
+    { en: "ostensible",   ko: "표면상의", ex: "The ___ reason was clear." },
+    { en: "pervasive",    ko: "만연한",   ex: "Fear became ___." },
+    { en: "recalcitrant", ko: "반항적인", ex: "He was a ___ student." },
+    { en: "tenacious",    ko: "끈질긴",   ex: "She was ___ in her effort." },
+    { en: "vicarious",    ko: "대리의",   ex: "She felt ___ joy." },
   ]},
 };
 
@@ -85,7 +132,6 @@ const SAMPLE_READING: Record<string, { title: string; passage: string; questions
       "2. What happens to people when they face too many options?",
       "3. What does 'paralysis' mean in this context? Explain in Korean.",
       "4. 본문의 내용과 일치하면 T, 일치하지 않으면 F를 쓰시오: Having more choices always makes people happier. ( )",
-      "5. 필자가 '선택의 역설'이라고 부르는 현상을 우리말로 설명하시오.",
     ],
   },
 };
@@ -96,53 +142,113 @@ const SAMPLE_FORMATIVE: Record<string, { title: string; items: { type: string; q
     { type: "객관식", q: "빈칸에 알맞은 단어는? 'I have ___ finished my homework.'", options: ["yet", "already", "since", "ago"], answer: "②" },
     { type: "서술형", q: "다음 단어의 뜻을 쓰고 예문을 한 가지 작성하시오: 'accomplish'" },
     { type: "서술형", q: "현재완료를 사용하여 다음 상황을 영작하시오: 나는 그 영화를 세 번 봤다." },
-    { type: "서술형", q: "밑줄 친 부분을 어법에 맞게 고치시오: She have lived here for 10 years." },
   ]},
   "고등-중급": { title: "수능 대비 형성평가 (독해 유형)", items: [
-    { type: "객관식", q: "다음 글의 주제로 가장 적절한 것은?", options: ["Benefits of regular exercise", "The history of modern sports", "How to prevent sports injuries", "The importance of mental health in athletes"], answer: "①" },
+    { type: "객관식", q: "다음 글의 주제로 가장 적절한 것은?", options: ["Benefits of regular exercise", "The history of modern sports", "How to prevent sports injuries", "The importance of mental health"], answer: "①" },
     { type: "객관식", q: "글의 빈칸에 들어갈 말로 가장 적절한 것은? 'The key to success is not talent but ___.'", options: ["intelligence", "persistence", "creativity", "appearance"], answer: "②" },
     { type: "서술형", q: "다음 글의 밑줄 친 부분이 가리키는 것을 본문에서 찾아 쓰시오." },
     { type: "서술형", q: "주어진 문장이 들어가기에 가장 적절한 위치를 고르고 그 이유를 설명하시오." },
   ]},
 };
 
-/* ── 컴포넌트 ── */
-export default function AiMaterialPage() {
-  const [matType, setMatType] = useState<string>("vocab");
-  const [schoolLevel, setSchoolLevel] = useState<string>("");
-  const [grade, setGrade] = useState<string>("");
-  const [studentLevel, setStudentLevel] = useState<string>("");
-  const [topic, setTopic] = useState<string>("");
-  const [count, setCount] = useState<string>("5");
-  const [generated, setGenerated] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const [saved,  setSaved]  = useState(false);
+function AiMaterialContent() {
+  const params = useSearchParams();
+  const bookId    = params.get("bookId")    ?? undefined;
+  const bookTitle = params.get("bookTitle") ?? undefined;
+
+  const [category,      setCategory]      = useState<CategoryId | null>(null);
+  const [subType,       setSubType]       = useState<string>("");
+  const [schoolLevel,   setSchoolLevel]   = useState<string>("");
+  const [grade,         setGrade]         = useState<string>("");
+  const [studentLevel,  setStudentLevel]  = useState<string>("");
+  const [topic,         setTopic]         = useState<string>("");
+  const [count,         setCount]         = useState<string>("5");
+  const [generated,     setGenerated]     = useState(false);
+  const [copied,        setCopied]        = useState(false);
+  const [saved,         setSaved]         = useState(false);
   const { save: saveMaterial } = useMyMaterials();
 
-  const canGenerate = schoolLevel && studentLevel;
-
+  const activeCat = CATEGORIES.find(c => c.id === category);
+  const canGenerate = !!category && !!subType && !!schoolLevel && !!studentLevel;
   const lookupKey = `${schoolLevel}-${studentLevel}`;
+
+  const handleSelectCategory = (id: CategoryId) => {
+    setCategory(id);
+    setSubType("");
+    setGenerated(false);
+  };
 
   const handleGenerate = () => setGenerated(true);
   const handleReset    = () => { setGenerated(false); setCopied(false); setSaved(false); };
 
   const handleSave = () => {
-    const typeLabel = MATERIAL_TYPES.find(t => t.id === matType)?.label ?? matType;
-    saveMaterial({ typeId: matType, typeLabel, schoolLevel, grade, studentLevel, topic, count });
+    const sub = activeCat?.subs.find(s => s.id === subType);
+    saveMaterial({ typeId: subType, typeLabel: sub?.label ?? subType, schoolLevel, grade, studentLevel, topic, count, bookId, bookTitle });
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
   };
 
-  const handleCopy = () => {
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+  const handleCopy = () => { setCopied(true); setTimeout(() => setCopied(false), 2000); };
 
   /* ── 미리보기 렌더링 ── */
   const renderPreview = () => {
-    if (matType === "vocab") {
+    /* 어휘 계열 */
+    if (subType === "vocab" || subType === "flash" || subType === "vocab-test") {
       const data = SAMPLE_VOCAB[lookupKey] ?? SAMPLE_VOCAB["중등-기초"];
       const words = data.words.slice(0, Number(count));
+
+      if (subType === "flash") {
+        return (
+          <div className="space-y-4">
+            <div className="border-b border-slate-200 pb-3 mb-4">
+              <h3 className="font-black text-slate-800 text-base">플래시카드</h3>
+              <p className="text-xs text-slate-500 mt-0.5">{schoolLevel} {grade} · {studentLevel} · {words.length}장</p>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {words.map((w, i) => (
+                <div key={i} className="rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+                  <div className="bg-emerald-600 text-white text-center py-3 px-2 font-black text-lg">{w.en}</div>
+                  <div className="bg-emerald-50 text-center py-3 px-2">
+                    <p className="font-bold text-emerald-800 text-sm">{w.ko}</p>
+                    <p className="text-xs text-slate-400 mt-1 italic">{w.ex.replace("___", w.en)}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      }
+
+      if (subType === "vocab-test") {
+        return (
+          <div className="space-y-4">
+            <div className="border-b border-slate-200 pb-3 mb-4">
+              <h3 className="font-black text-slate-800 text-base">어휘 테스트</h3>
+              <p className="text-xs text-slate-500 mt-0.5">{schoolLevel} {grade} · {studentLevel}</p>
+            </div>
+            <p className="text-sm font-bold text-slate-700 mb-2">[A] 다음 단어의 우리말 뜻을 쓰시오.</p>
+            <table className="w-full text-sm border-collapse mb-4">
+              <thead><tr className="bg-slate-100">
+                <th className="border border-slate-200 px-3 py-1.5 text-left text-xs w-8">번호</th>
+                <th className="border border-slate-200 px-3 py-1.5 text-left text-xs">영단어</th>
+                <th className="border border-slate-200 px-3 py-1.5 text-left text-xs">뜻</th>
+              </tr></thead>
+              <tbody>{words.map((w, i) => (
+                <tr key={i} className={i%2===0?"bg-white":"bg-slate-50/50"}>
+                  <td className="border border-slate-200 px-3 py-2 text-xs text-slate-400">{i+1}</td>
+                  <td className="border border-slate-200 px-3 py-2 font-semibold text-blue-700">{w.en}</td>
+                  <td className="border border-slate-200 px-3 py-2 text-slate-300 text-xs">____________</td>
+                </tr>
+              ))}</tbody>
+            </table>
+            <p className="text-sm font-bold text-slate-700 mb-2">[B] 빈칸에 알맞은 단어를 쓰시오.</p>
+            <ol className="space-y-2">{words.map((w, i) => (
+              <li key={i} className="text-sm text-slate-700">{i+1}. {w.ex}</li>
+            ))}</ol>
+          </div>
+        );
+      }
+
       return (
         <div className="space-y-4">
           <div className="border-b border-slate-200 pb-3 mb-4">
@@ -152,7 +258,10 @@ export default function AiMaterialPage() {
           <div>
             <p className="text-sm font-bold text-slate-700 mb-2">[A] 다음 단어의 뜻을 빈칸에 쓰시오.</p>
             <table className="w-full text-sm border-collapse">
-              <thead><tr className="bg-slate-100"><th className="border border-slate-200 px-3 py-1.5 text-left text-xs">영단어</th><th className="border border-slate-200 px-3 py-1.5 text-left text-xs">뜻 (우리말)</th></tr></thead>
+              <thead><tr className="bg-slate-100">
+                <th className="border border-slate-200 px-3 py-1.5 text-left text-xs">영단어</th>
+                <th className="border border-slate-200 px-3 py-1.5 text-left text-xs">뜻 (우리말)</th>
+              </tr></thead>
               <tbody>{words.map((w, i) => (
                 <tr key={i} className={i%2===0?"bg-white":"bg-slate-50/50"}>
                   <td className="border border-slate-200 px-3 py-2 font-semibold text-blue-700">{w.en}</td>
@@ -164,7 +273,7 @@ export default function AiMaterialPage() {
           <div>
             <p className="text-sm font-bold text-slate-700 mb-2">[B] 빈칸에 알맞은 단어를 보기에서 골라 쓰시오.</p>
             <div className="flex flex-wrap gap-1.5 mb-3 p-2 bg-blue-50 rounded-lg border border-blue-100">
-              {words.map((w) => <span key={w.en} className="text-xs bg-white border border-blue-200 px-2 py-0.5 rounded font-semibold text-blue-700">{w.en}</span>)}
+              {words.map(w => <span key={w.en} className="text-xs bg-white border border-blue-200 px-2 py-0.5 rounded font-semibold text-blue-700">{w.en}</span>)}
             </div>
             <ol className="space-y-1.5">{words.map((w, i) => (
               <li key={i} className="text-sm text-slate-700">{i+1}. {w.ex} <span className="text-slate-300 text-xs">(정답: {w.en})</span></li>
@@ -173,12 +282,14 @@ export default function AiMaterialPage() {
         </div>
       );
     }
-    if (matType === "grammar") {
+
+    /* 문법 */
+    if (subType === "grammar") {
       const data = SAMPLE_GRAMMAR[lookupKey] ?? SAMPLE_GRAMMAR["중등-기초"];
       return (
         <div className="space-y-5">
           <div className="border-b border-slate-200 pb-3">
-            <h3 className="font-black text-slate-800 text-base">문법 연습 문제 · {data.title}</h3>
+            <h3 className="font-black text-slate-800 text-base">문법 {category === "worksheet" ? "워크시트" : "문제"} · {data.title}</h3>
             <p className="text-xs text-slate-500 mt-0.5">{schoolLevel} {grade} · {studentLevel}</p>
           </div>
           {data.points.map((pt, i) => (
@@ -196,12 +307,14 @@ export default function AiMaterialPage() {
         </div>
       );
     }
-    if (matType === "reading") {
+
+    /* 독해 */
+    if (subType === "reading") {
       const data = SAMPLE_READING[lookupKey] ?? SAMPLE_READING["중등-기초"];
       return (
         <div className="space-y-4">
           <div className="border-b border-slate-200 pb-3">
-            <h3 className="font-black text-slate-800 text-base">독해 지문 + 이해 문제</h3>
+            <h3 className="font-black text-slate-800 text-base">독해 {category === "worksheet" ? "워크시트" : "문제"}</h3>
             <p className="text-xs text-slate-500 mt-0.5">{schoolLevel} {grade} · {studentLevel}</p>
           </div>
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
@@ -221,7 +334,9 @@ export default function AiMaterialPage() {
         </div>
       );
     }
-    if (matType === "cloze") {
+
+    /* 빈칸 채우기 */
+    if (subType === "cloze") {
       const passage = lookupKey.includes("고등")
         ? "Many scientists believe that climate change is one of the most (1)___ challenges of our time. Rising temperatures are (2)___ sea levels, causing floods in coastal areas. Governments around the world need to (3)___ immediate action to reduce carbon emissions."
         : "Reading is one of the best ways to (1)___ your English skills. When you read (2)___, you learn new words and improve your grammar. Try to read something (3)___ every day.";
@@ -230,7 +345,7 @@ export default function AiMaterialPage() {
         <div className="space-y-4">
           <div className="border-b border-slate-200 pb-3">
             <h3 className="font-black text-slate-800 text-base">빈칸 채우기</h3>
-            <p className="text-xs text-slate-500 mt-0.5">{schoolLevel} {grade} · {studentLevel} · {topic || "일반"}</p>
+            <p className="text-xs text-slate-500 mt-0.5">{schoolLevel} {grade} · {studentLevel}</p>
           </div>
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
             <p className="text-sm text-slate-700 leading-relaxed">{passage}</p>
@@ -241,8 +356,8 @@ export default function AiMaterialPage() {
           </div>
           <div>
             <p className="text-sm font-bold text-slate-700 mb-2">보기에서 알맞은 단어를 골라 빈칸을 채우시오.</p>
-            <div className="flex flex-wrap gap-1.5 p-2 bg-blue-50 rounded-lg border border-blue-100 mb-3">
-              {[...answers].sort(() => Math.random() - 0.5).map((a) => (
+            <div className="flex flex-wrap gap-1.5 p-2 bg-blue-50 rounded-lg border border-blue-100">
+              {[...answers].sort(() => Math.random() - 0.5).map(a => (
                 <span key={a} className="text-xs bg-white border border-blue-200 px-2 py-0.5 rounded font-semibold text-blue-700">{a}</span>
               ))}
             </div>
@@ -250,7 +365,9 @@ export default function AiMaterialPage() {
         </div>
       );
     }
-    if (matType === "formative") {
+
+    /* 형성평가 */
+    if (subType === "formative") {
       const data = SAMPLE_FORMATIVE[lookupKey] ?? SAMPLE_FORMATIVE["중등-기초"];
       return (
         <div className="space-y-4">
@@ -268,7 +385,7 @@ export default function AiMaterialPage() {
               <p className="text-sm text-slate-800 font-medium">{item.q}</p>
               {item.options && (
                 <ol className="mt-2 space-y-0.5">{item.options.map((opt, j) => (
-                  <li key={j} className="text-xs text-slate-600">{'①②③④'[j]} {opt}</li>
+                  <li key={j} className="text-xs text-slate-600">{"①②③④"[j]} {opt}</li>
                 ))}</ol>
               )}
               {item.type === "서술형" && <div className="mt-2 h-10 border-b border-dashed border-slate-300" />}
@@ -277,8 +394,105 @@ export default function AiMaterialPage() {
         </div>
       );
     }
+
+    /* 게임: 어휘 퀴즈 */
+    if (subType === "game-quiz") {
+      const data = SAMPLE_VOCAB[lookupKey] ?? SAMPLE_VOCAB["중등-기초"];
+      const words = data.words.slice(0, 4);
+      return (
+        <div className="space-y-4">
+          <div className="border-b border-slate-200 pb-3">
+            <h3 className="font-black text-slate-800 text-base">어휘 퀴즈 게임</h3>
+            <p className="text-xs text-slate-500 mt-0.5">{schoolLevel} · {studentLevel} · {words.length}문제 미리보기</p>
+          </div>
+          {words.map((w, i) => {
+            const wrongs = data.words.filter(x => x.ko !== w.ko).slice(0, 3).map(x => x.ko);
+            const choices = [...wrongs, w.ko].sort(() => Math.random() - 0.5);
+            return (
+              <div key={i} className="bg-orange-50 border border-orange-200 rounded-xl p-4">
+                <p className="text-sm font-bold text-slate-700 mb-3">Q{i+1}. <span className="text-orange-700 text-lg">{w.en}</span> 의 뜻은?</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {choices.map((c, j) => (
+                    <div key={j} className={`text-xs px-3 py-2 rounded-lg border text-center font-medium ${c === w.ko ? "bg-orange-100 border-orange-400 text-orange-800" : "bg-white border-slate-200 text-slate-600"}`}>
+                      {"①②③④"[j]} {c}
+                      {c === w.ko && <span className="ml-1 text-[10px] text-orange-600">(정답)</span>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+
+    /* 게임: 매칭 */
+    if (subType === "game-match") {
+      const data = SAMPLE_VOCAB[lookupKey] ?? SAMPLE_VOCAB["중등-기초"];
+      const words = data.words.slice(0, Number(count));
+      const shuffledKo = [...words].sort(() => Math.random() - 0.5);
+      return (
+        <div className="space-y-4">
+          <div className="border-b border-slate-200 pb-3">
+            <h3 className="font-black text-slate-800 text-base">단어–뜻 매칭 게임</h3>
+            <p className="text-xs text-slate-500 mt-0.5">왼쪽 단어와 오른쪽 뜻을 선으로 연결하세요</p>
+          </div>
+          <div className="flex gap-4">
+            <div className="flex-1 space-y-2">
+              {words.map((w, i) => (
+                <div key={i} className="flex items-center gap-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg">
+                  <span className="w-5 h-5 bg-blue-600 text-white rounded-full text-[10px] flex items-center justify-center font-black shrink-0">{i+1}</span>
+                  <span className="text-sm font-bold text-blue-800">{w.en}</span>
+                </div>
+              ))}
+            </div>
+            <div className="flex-1 space-y-2">
+              {shuffledKo.map((w, i) => (
+                <div key={i} className="flex items-center gap-2 px-3 py-2 bg-orange-50 border border-orange-200 rounded-lg">
+                  <span className="w-5 h-5 bg-orange-500 text-white rounded-full text-[10px] flex items-center justify-center font-black shrink-0">{"ABCDE"[i]}</span>
+                  <span className="text-sm font-bold text-orange-800">{w.ko}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+            <p className="text-xs font-bold text-amber-700 mb-1">📝 정답 (교사용)</p>
+            <p className="text-xs text-amber-700">{words.map((w, i) => `${i+1}-${["A","B","C","D","E"][shuffledKo.findIndex(s => s.en === w.en)]}`).join("  ")}</p>
+          </div>
+        </div>
+      );
+    }
+
+    /* 게임: 빙고 */
+    if (subType === "game-bingo") {
+      const data = SAMPLE_VOCAB[lookupKey] ?? SAMPLE_VOCAB["중등-기초"];
+      const all = [...data.words, ...data.words].slice(0, 25);
+      const shuffled = [...all].sort(() => Math.random() - 0.5);
+      return (
+        <div className="space-y-4">
+          <div className="border-b border-slate-200 pb-3">
+            <h3 className="font-black text-slate-800 text-base">단어 빙고 카드</h3>
+            <p className="text-xs text-slate-500 mt-0.5">교사가 뜻을 읽으면 해당 단어에 표시!</p>
+          </div>
+          <div className="grid grid-cols-5 gap-1">
+            {["B","I","N","G","O"].map(l => (
+              <div key={l} className="bg-orange-500 text-white text-center py-2 rounded-lg font-black text-sm">{l}</div>
+            ))}
+            {shuffled.slice(0, 25).map((w, i) => (
+              <div key={i} className={`text-center py-2 px-1 rounded-lg border text-[10px] font-semibold ${i === 12 ? "bg-orange-100 border-orange-300 text-orange-700" : "bg-white border-slate-200 text-slate-700"}`}>
+                {i === 12 ? "FREE" : w.en}
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-slate-400 text-center">🖨️ 학생 수만큼 인쇄하면 각기 다른 순서로 섞임</p>
+        </div>
+      );
+    }
+
     return null;
   };
+
+  const subLabel = activeCat?.subs.find(s => s.id === subType)?.label ?? "";
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -286,12 +500,18 @@ export default function AiMaterialPage() {
       <nav className="flex items-center gap-2 text-sm text-slate-500 mb-6">
         <Link href="/edutech" className="hover:text-blue-600">에듀테크</Link>
         <span>/</span>
+        {bookId && (
+          <>
+            <Link href="/my-class" className="hover:text-blue-600">마이클래스</Link>
+            <span>/</span>
+          </>
+        )}
         <span className="text-slate-800 font-medium">AI 자료 생성</span>
       </nav>
 
       {/* 헤더 */}
-      <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-2xl p-6 text-white mb-6">
-        <div className="flex items-center gap-3 mb-1">
+      <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-2xl p-6 text-white mb-4">
+        <div className="flex items-center gap-3">
           <span className="text-3xl">🤖</span>
           <div>
             <div className="flex items-center gap-2">
@@ -303,45 +523,111 @@ export default function AiMaterialPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-5">
+      {/* 연결 교재 배너 (마이클래스에서 진입 시) */}
+      {bookId && bookTitle && (
+        <div className="flex items-center gap-3 bg-indigo-50 border-2 border-indigo-200 rounded-2xl px-5 py-3.5 mb-4">
+          <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center shrink-0">
+            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider mb-0.5">마이클래스 연결 교재</p>
+            <p className="text-sm font-black text-indigo-800 truncate">{bookTitle}</p>
+          </div>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span className="flex items-center gap-1 text-[10px] font-bold text-indigo-600 bg-indigo-100 px-2.5 py-1 rounded-full">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+              </svg>
+              선택됨
+            </span>
+            <Link
+              href="/my-class"
+              className="text-[10px] font-bold text-indigo-500 hover:text-indigo-700 border border-indigo-200 hover:border-indigo-400 px-2.5 py-1 rounded-full transition-colors"
+            >
+              마이클래스로
+            </Link>
+          </div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-[400px_1fr] gap-5">
 
         {/* ── 왼쪽: 설정 패널 ── */}
-        <div className="space-y-5">
+        <div className="space-y-4">
 
-          {/* 자료 유형 */}
+          {/* STEP 1: 기능 선택 */}
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
-            <p className="text-xs font-bold text-slate-500 mb-3 flex items-center gap-1.5">
+            <p className="text-xs font-bold text-slate-500 mb-4 flex items-center gap-1.5">
               <span className="w-5 h-5 bg-indigo-600 text-white rounded-full text-[10px] flex items-center justify-center font-black">1</span>
-              자료 유형
+              기능 선택
             </p>
-            <div className="space-y-2">
-              {MATERIAL_TYPES.map((t) => (
-                <button key={t.id} onClick={() => { setMatType(t.id); setGenerated(false); }}
-                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl border-2 text-left transition-all ${
-                    matType === t.id
-                      ? "border-indigo-500 bg-indigo-50"
-                      : "border-slate-200 hover:border-indigo-200 hover:bg-slate-50"
-                  }`}
-                >
-                  <span className="text-xl">{t.icon}</span>
-                  <div>
-                    <p className={`text-sm font-bold ${matType === t.id ? "text-indigo-700" : "text-slate-700"}`}>{t.label}</p>
-                    <p className="text-[10px] text-slate-400">{t.desc}</p>
-                  </div>
-                  {matType === t.id && (
-                    <svg className="w-4 h-4 text-indigo-500 ml-auto shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                    </svg>
-                  )}
-                </button>
-              ))}
+            <div className="grid grid-cols-2 gap-3">
+              {CATEGORIES.map((cat) => {
+                const isActive = category === cat.id;
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => handleSelectCategory(cat.id)}
+                    className={`flex flex-col items-start gap-1.5 p-4 rounded-xl border-2 text-left transition-all ${
+                      isActive
+                        ? `${cat.color.card} border-current shadow-sm`
+                        : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+                    }`}
+                  >
+                    <span className="text-2xl">{cat.icon}</span>
+                    <p className={`text-sm font-black leading-tight ${isActive ? cat.color.text : "text-slate-700"}`}>
+                      {cat.label}
+                    </p>
+                    <p className="text-[10px] text-slate-400 leading-snug">{cat.desc}</p>
+                    {isActive && (
+                      <span className={`mt-0.5 text-[10px] ${cat.color.badge} text-white px-2 py-0.5 rounded-full font-bold`}>선택됨</span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
-          {/* 학생 정보 */}
+          {/* STEP 2: 세부 유형 */}
+          {activeCat && (
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+              <p className="text-xs font-bold text-slate-500 mb-3 flex items-center gap-1.5">
+                <span className="w-5 h-5 bg-indigo-600 text-white rounded-full text-[10px] flex items-center justify-center font-black">2</span>
+                세부 유형
+              </p>
+              <div className="space-y-2">
+                {activeCat.subs.map((sub) => (
+                  <button
+                    key={sub.id}
+                    onClick={() => { setSubType(sub.id); setGenerated(false); }}
+                    className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl border-2 text-left transition-all ${
+                      subType === sub.id
+                        ? `${activeCat.color.card} border-current`
+                        : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+                    }`}
+                  >
+                    <span className="text-lg">{sub.icon}</span>
+                    <div>
+                      <p className={`text-sm font-bold ${subType === sub.id ? activeCat.color.text : "text-slate-700"}`}>{sub.label}</p>
+                      <p className="text-[10px] text-slate-400">{sub.desc}</p>
+                    </div>
+                    {subType === sub.id && (
+                      <svg className={`w-4 h-4 ml-auto shrink-0 ${activeCat.color.text}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* STEP 3: 학생 정보 */}
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
             <p className="text-xs font-bold text-slate-500 flex items-center gap-1.5">
-              <span className="w-5 h-5 bg-indigo-600 text-white rounded-full text-[10px] flex items-center justify-center font-black">2</span>
+              <span className="w-5 h-5 bg-indigo-600 text-white rounded-full text-[10px] flex items-center justify-center font-black">3</span>
               학생 정보
             </p>
 
@@ -389,7 +675,7 @@ export default function AiMaterialPage() {
               </div>
             </div>
 
-            {/* 주제 (선택) */}
+            {/* 주제 */}
             <div>
               <p className="text-xs text-slate-500 mb-1.5">주제 / 키워드 <span className="text-slate-400">(선택)</span></p>
               <input
@@ -401,8 +687,8 @@ export default function AiMaterialPage() {
               />
             </div>
 
-            {/* 문항 수 */}
-            {(matType === "vocab") && (
+            {/* 단어 수 */}
+            {(category === "vocab" || (category === "worksheet" && subType === "vocab")) && (
               <div>
                 <p className="text-xs text-slate-500 mb-1.5">단어 수</p>
                 <div className="flex gap-2">
@@ -437,62 +723,55 @@ export default function AiMaterialPage() {
         {/* ── 오른쪽: 미리보기 ── */}
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
           {!generated ? (
-            /* 빈 상태 */
-            <div className="flex flex-col items-center justify-center h-full min-h-[400px] gap-4 text-center p-8">
+            <div className="flex flex-col items-center justify-center h-full min-h-[480px] gap-5 text-center p-8">
               <div className="w-20 h-20 bg-indigo-50 rounded-2xl flex items-center justify-center text-4xl">🤖</div>
               <div>
-                <p className="font-bold text-slate-700">자료 유형과 학생 정보를 선택하세요</p>
-                <p className="text-sm text-slate-400 mt-1">조건을 설정하고 생성 버튼을 누르면<br />맞춤형 학습 자료가 바로 만들어집니다.</p>
+                <p className="font-bold text-slate-700">기능을 선택하고 조건을 설정하세요</p>
+                <p className="text-sm text-slate-400 mt-1">생성 버튼을 누르면 맞춤형 자료가 즉시 만들어집니다.</p>
               </div>
-              <div className="flex flex-wrap justify-center gap-2 mt-2">
-                {MATERIAL_TYPES.map((t) => (
-                  <span key={t.id} className="text-xs bg-slate-100 text-slate-500 px-2.5 py-1 rounded-full">{t.icon} {t.label}</span>
+              <div className="grid grid-cols-2 gap-3 w-full max-w-sm">
+                {CATEGORIES.map((cat) => (
+                  <div key={cat.id} className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border ${cat.color.card}`}>
+                    <span className="text-lg">{cat.icon}</span>
+                    <span className={`text-xs font-bold ${cat.color.text}`}>{cat.label}</span>
+                  </div>
                 ))}
               </div>
             </div>
           ) : (
-            /* 생성 결과 */
             <div>
-              {/* 결과 액션 바 */}
               <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 bg-slate-50">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-indigo-600 bg-indigo-50 border border-indigo-200 px-2.5 py-0.5 rounded-full">
-                    {MATERIAL_TYPES.find((t) => t.id === matType)?.label}
+                  <span className={`text-xs font-bold text-white ${activeCat?.color.badge} px-2.5 py-0.5 rounded-full`}>
+                    {activeCat?.icon} {activeCat?.label}
                   </span>
+                  <span className="text-xs font-semibold text-slate-600">{subLabel}</span>
                   <span className="text-xs text-slate-400">{schoolLevel} {grade} · {studentLevel}</span>
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={handleReset}
-                    className="text-xs text-slate-500 hover:text-slate-700 border border-slate-200 px-3 py-1.5 rounded-lg transition-colors">
+                  <button onClick={handleReset} className="text-xs text-slate-500 hover:text-slate-700 border border-slate-200 px-3 py-1.5 rounded-lg transition-colors">
                     다시 설정
                   </button>
                   <button onClick={handleCopy}
                     className={`flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg transition-all ${
                       copied ? "bg-green-100 text-green-700 border border-green-300" : "bg-indigo-600 text-white hover:bg-indigo-700"
                     }`}>
-                    {copied ? (
-                      <><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>복사됨</>
-                    ) : (
-                      <><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>복사</>
-                    )}
+                    {copied ? "복사됨 ✓" : "복사"}
                   </button>
                   <button onClick={handleSave}
                     className={`flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg transition-all ${
                       saved ? "bg-teal-100 text-teal-700 border border-teal-300" : "bg-white border border-indigo-300 text-indigo-600 hover:bg-indigo-50"
                     }`}>
-                    {saved ? (
-                      <><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>저장됨</>
-                    ) : (
-                      <><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg>저장</>
-                    )}
+                    {saved ? "저장됨 ✓" : "저장"}
                   </button>
                   <button className="flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 transition-colors">
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                    </svg>
                     인쇄
                   </button>
                 </div>
               </div>
-              {/* 미리보기 본문 */}
               <div className="p-6 overflow-y-auto max-h-[640px]">
                 {renderPreview()}
               </div>
@@ -501,5 +780,13 @@ export default function AiMaterialPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function AiMaterialPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-slate-400">로딩 중...</div>}>
+      <AiMaterialContent />
+    </Suspense>
   );
 }

@@ -1,6 +1,4 @@
 import Link from "next/link";
-import SearchBar from "./components/SearchBar";
-
 
 const banners = [
   {
@@ -29,11 +27,11 @@ const banners = [
 ];
 
 const notices = [
-  { id: 7,  title: "마이클래스, 수업안 만들기 이용 방법 안내",            date: "2025-06-01", isImportant: true },
-  { id: 1,  title: "[공지] 2025년 YBM 신규 교재 등록 안내",              date: "2025-05-20", isImportant: true },
+  { id: 7,  title: "마이클래스, 수업안 만들기 이용 방법 안내",             date: "2025-06-01", isImportant: true },
+  { id: 1,  title: "[공지] 2025년 YBM 신규 교재 등록 안내",               date: "2025-05-20", isImportant: true },
   { id: 2,  title: "[공지] 에듀테크 서비스 점검 안내 (5/25 02:00~04:00)", date: "2025-05-18", isImportant: true },
-  { id: 3,  title: "AI평가 서비스 정식 출시 안내",                        date: "2025-05-15", isImportant: false },
-  { id: 4,  title: "커넥팅북 E-BOOK 업데이트 내역",                      date: "2025-05-10", isImportant: false },
+  { id: 3,  title: "AI평가 서비스 정식 출시 안내",                         date: "2025-05-15", isImportant: false },
+  { id: 4,  title: "커넥팅북 E-BOOK 업데이트 내역",                       date: "2025-05-10", isImportant: false },
 ];
 
 const faqs = [
@@ -50,7 +48,6 @@ const recommendedBooks = [
   { id: "3",  title: "Phonics NOW 1",               level: "초등", category: "파닉스", emoji: "📙", image: "/images/books/phonics-now-1.jpg" },
   { id: "12", title: "Benchmark Reading Starter 1", level: "초등", category: "독해",   emoji: "📗", image: "/images/books/benchmark-reading-starter-1.jpg" },
   { id: "10", title: "Booster 유형독해",             level: "고등", category: "독해",   emoji: "📰", image: "/images/books/booster-reading.jpg" },
-  { id: "16", title: "Listening Booster 30",        level: "고등", category: "듣기",   emoji: "🎧", image: "/images/books/listening-booster-30.jpg" },
 ];
 
 export default function HomePage() {
@@ -58,27 +55,21 @@ export default function HomePage() {
     <div className="min-h-screen">
       {/* Hero */}
       <section className="bg-[#1B3A6B] text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 md:pt-16 pb-12 md:pb-16">
-          <div className="text-center mb-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-[58px] md:pt-[77px] pb-[58px] md:pb-[77px]">
+          <div className="text-center">
             <p className="text-blue-300 text-sm font-medium mb-2 tracking-wider uppercase">YBM 강사 전용 플랫폼</p>
-            <h1 className="text-3xl md:text-4xl font-black tracking-tight mb-3">
+            <h1 className="text-[36px] md:text-[44px] font-black tracking-tight mb-3">
               스마트한 수업, <span className="text-amber-400">Y튜터</span>와 함께
             </h1>
-            <p className="text-blue-200 text-base md:text-lg">
+            <p className="text-blue-200 text-[19px] md:text-[21px]">
               교재·수업도구·학습로드맵을 한 곳에서 관리하세요
             </p>
           </div>
-
-          {/* Search Bar */}
-          <SearchBar />
-
         </div>
       </section>
 
-
-{/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        {/* Banners */}
+        {/* 배너 */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {banners.map((banner) => (
             <Link
@@ -103,7 +94,7 @@ export default function HomePage() {
           ))}
         </div>
 
-        {/* Recommended Books */}
+        {/* 추천 도서 */}
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
           <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
             <div className="flex items-center gap-2">
@@ -117,7 +108,7 @@ export default function HomePage() {
               </svg>
             </Link>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 divide-x divide-y divide-slate-100">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-x divide-y divide-slate-100">
             {recommendedBooks.map((book) => (
               <Link
                 key={book.id}
@@ -128,7 +119,7 @@ export default function HomePage() {
                   <img
                     src={book.image}
                     alt={book.title}
-                    className="w-16 h-[88px] object-cover rounded-lg shadow-sm border border-slate-100 mb-2.5"
+                    className="w-[84px] h-[115px] object-cover rounded-lg shadow-sm border border-slate-100 mb-2.5"
                   />
                 ) : (
                   <div className="text-4xl mb-2">{book.emoji}</div>
@@ -144,6 +135,7 @@ export default function HomePage() {
             ))}
           </div>
         </div>
+
         {/* 공지사항 + FAQ */}
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col sm:flex-row">
           {/* 공지사항 */}
@@ -177,7 +169,6 @@ export default function HomePage() {
             </ul>
           </div>
 
-          {/* 구분선 */}
           <div className="w-px bg-slate-100 hidden sm:block" />
           <div className="h-px bg-slate-100 sm:hidden" />
 

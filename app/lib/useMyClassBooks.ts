@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 
 const KEY = "ytuter_myclass_book_ids";
-const DEFAULTS = ["1", "3"]; // Reading Prime 1, Phonics NOW 1
+const DEFAULTS = ["1", "3", "10"]; // Reading Prime 1, Phonics NOW 1, Booster 유형독해
 
 export function useMyClassBooks() {
   const [ids, setIds] = useState<string[]>([]);

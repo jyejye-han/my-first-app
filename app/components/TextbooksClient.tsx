@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useMyClassBooks } from "../lib/useMyClassBooks";
@@ -133,65 +133,14 @@ const BOOKS: Book[] = [
 const LEVEL_TABS = ["전체", "초등", "중등", "고등"] as const;
 type LevelTab = (typeof LEVEL_TABS)[number];
 
-// 검색필터 패널 (상세필터 논의 필요 버전)
-function FilterPanel({
-  open, levelFilter, onLevelChange, onClose,
-}: {
-  open: boolean;
-  levelFilter: string[];
-  onLevelChange: (v: string) => void;
-  onClose: () => void;
-}) {
-  if (!open) return null;
-  return (
-    <div className="mt-2 bg-white rounded-2xl border border-slate-200 shadow-xl p-5">
-      <div className="flex items-center gap-4 flex-wrap">
-        <span className="text-sm font-semibold text-slate-700 shrink-0">이용대상</span>
-        <div className="flex gap-2">
-          {["초등", "중등", "고등", "성인"].map((lv) => (
-            <button
-              key={lv}
-              onClick={() => onLevelChange(lv)}
-              className={`px-4 py-1.5 rounded-full text-sm font-semibold border transition-all ${
-                levelFilter.includes(lv)
-                  ? "bg-[#1B3A6B] border-[#1B3A6B] text-white"
-                  : "bg-white border-slate-200 text-slate-600 hover:border-blue-300 hover:text-blue-700"
-              }`}
-            >
-              {lv}
-            </button>
-          ))}
-        </div>
-      </div>
-      <div className="mt-4 flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5">
-        <svg className="w-4 h-4 text-amber-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-        </svg>
-        <p className="text-xs text-amber-700 font-medium">상세 필터는 논의 필요</p>
-      </div>
-      <div className="mt-4 flex justify-end gap-2">
-        <button onClick={() => { onLevelChange("__clear__"); }} className="px-4 py-2 text-sm text-slate-500 hover:text-slate-700 border border-slate-200 rounded-xl">초기화</button>
-        <button onClick={onClose} className="px-5 py-2 text-sm font-semibold bg-[#1B3A6B] hover:bg-[#163060] text-white rounded-xl">적용</button>
-      </div>
-    </div>
-  );
-}
-
 export default function TextbooksClient() {
   const searchParams = useSearchParams();
   const { ids: pinned, addBook, removeBook, hasBook } = useMyClassBooks();
-  const [query, setQuery] = useState(searchParams.get("q") ?? "");
-  const [filterOpen, setFilterOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<LevelTab>("전체");
-  const [detailFilter, setDetailFilter] = useState<string[]>([]);
-
-  // URL 파라미터 변경 시 검색어 동기화
-  useEffect(() => {
-    const q = searchParams.get("q");
-    setQuery(q ?? "");
-  }, [searchParams]);
-
   const [showGuide, setShowGuide] = useState(false);
+
+  const query   = searchParams.get("q") ?? "";
+  const urlLevels = (searchParams.get("levels") ?? "").split(",").filter(Boolean);
 
   const togglePin = (id: string) => {
     if (hasBook(id)) {
@@ -203,19 +152,14 @@ export default function TextbooksClient() {
     }
   };
 
-  const toggleDetail = (v: string) => {
-    if (v === "__clear__") { setDetailFilter([]); return; }
-    setDetailFilter((prev) => prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v]);
-  };
-
   const filtered = BOOKS
     .filter((b) => {
-      const matchTab = activeTab === "전체" || b.levelGroup === activeTab;
+      const matchTab   = activeTab === "전체" || b.levelGroup === activeTab;
       const matchQuery = !query ||
         b.title.toLowerCase().includes(query.toLowerCase()) ||
         b.author.toLowerCase().includes(query.toLowerCase());
-      const matchDetail = detailFilter.length === 0 || detailFilter.includes(b.levelGroup);
-      return matchTab && matchQuery && matchDetail;
+      const matchLevel = urlLevels.length === 0 || urlLevels.includes(b.levelGroup);
+      return matchTab && matchQuery && matchLevel;
     })
     .sort((a, b) => (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0));
 
@@ -312,52 +256,6 @@ export default function TextbooksClient() {
             )}
           </>
         )}
-      </div>
-
-      {/* ── 검색 + 필터 ── */}
-      <div className="mb-5">
-        <div className="bg-white rounded-2xl border-2 border-[#1B3A6B] p-3 flex gap-2 shadow-sm">
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="교재명·저자 검색"
-            className="flex-1 text-sm text-slate-700 px-3 py-2 focus:outline-none rounded-lg"
-          />
-          <button className="bg-[#1B3A6B] hover:bg-[#163060] text-white px-5 py-2 rounded-xl text-sm font-semibold transition-colors flex items-center gap-1.5">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            검색
-          </button>
-          <button
-            onClick={() => setFilterOpen((v) => !v)}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold border transition-all ${
-              filterOpen || detailFilter.length > 0
-                ? "bg-blue-50 border-blue-400 text-blue-700"
-                : "bg-white border-slate-200 text-slate-600 hover:border-blue-300 hover:text-blue-700"
-            }`}
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z" />
-            </svg>
-            검색필터
-            {detailFilter.length > 0 && (
-              <span className="w-4 h-4 bg-blue-600 text-white text-[10px] font-black rounded-full flex items-center justify-center">
-                {detailFilter.length}
-              </span>
-            )}
-            <svg className={`w-3 h-3 transition-transform ${filterOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-        </div>
-        <FilterPanel
-          open={filterOpen}
-          levelFilter={detailFilter}
-          onLevelChange={toggleDetail}
-          onClose={() => setFilterOpen(false)}
-        />
       </div>
 
       {/* ── 레벨 탭 필터 ── */}
