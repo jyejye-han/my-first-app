@@ -738,6 +738,9 @@ export default function MyClassClient() {
                   if (tool.href === "__connecting__") {
                     return <Link key={tool.label} href={`/edutech/connecting-book/viewer?bookId=${selectedId}`} className={cls}>{inner}</Link>;
                   }
+                  if (tool.href === "/edutech/vocab-wizard") {
+                    return <Link key={tool.label} href={`/edutech/vocab-wizard?bookId=${selectedId}`} className={cls}>{inner}</Link>;
+                  }
                   if (tool.href === "__online__") {
                     return <button key={tool.label} onClick={() => setOnlinePopup(true)} className={cls}>{inner}</button>;
                   }

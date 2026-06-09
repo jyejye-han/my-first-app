@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 /* ─── Types ─── */
 type Book = {
@@ -37,9 +38,20 @@ const QUIZ_TYPES = [
 
 const MAX_BOOKS = 3;
 
+// 마이클래스 bookId → VocabWizard bookId 매핑
+const MY_CLASS_TO_VOCAB: Record<string, string> = {
+  "1": "b6", "2": "b8",  "3": "b12", "4": "b9",
+  "5": "b1", "6": "b7",  "10": "b2", "11": "b4",
+  "12": "b10", "13": "b11", "14": "b3", "15": "b13", "16": "b5",
+};
+
 export default function VocabWizardClient() {
-  const [view, setView]                   = useState<"list" | "wizard">("list");
-  const [selectedBooks, setSelectedBooks] = useState<string[]>([]);
+  const searchParams   = useSearchParams();
+  const myClassBookId  = searchParams.get("bookId") ?? "";
+  const preselectedId  = MY_CLASS_TO_VOCAB[myClassBookId] ?? null;
+
+  const [view, setView]                   = useState<"list" | "wizard">(preselectedId ? "wizard" : "list");
+  const [selectedBooks, setSelectedBooks] = useState<string[]>(preselectedId ? [preselectedId] : []);
   const [filterOpen, setFilterOpen]       = useState(true);
   const [query, setQuery]                 = useState("");
   const [levelFilters, setLevelFilters]   = useState<string[]>([]);
