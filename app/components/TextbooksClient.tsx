@@ -138,6 +138,7 @@ export default function TextbooksClient() {
   const { ids: pinned, addBook, removeBook, hasBook } = useMyClassBooks();
   const [activeTab, setActiveTab] = useState<LevelTab>("전체");
   const [showGuide, setShowGuide] = useState(false);
+  const [sortByDate, setSortByDate] = useState(false);
 
   const query   = searchParams.get("q") ?? "";
   const urlLevels = (searchParams.get("levels") ?? "").split(",").filter(Boolean);
@@ -161,7 +162,12 @@ export default function TextbooksClient() {
       const matchLevel = urlLevels.length === 0 || urlLevels.includes(b.levelGroup);
       return matchTab && matchQuery && matchLevel;
     })
-    .sort((a, b) => (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0));
+    .sort((a, b) => {
+      if (sortByDate) {
+        return b.publishDate.localeCompare(a.publishDate);
+      }
+      return (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0);
+    });
 
   const pinnedBooks = BOOKS.filter((b) => pinned.includes(b.id));
 
@@ -273,7 +279,22 @@ export default function TextbooksClient() {
             {tab}
           </button>
         ))}
-        <span className="ml-auto text-xs text-slate-400 self-center">{filtered.length}권</span>
+        <div className="ml-auto flex items-center gap-2">
+          <button
+            onClick={() => setSortByDate((v) => !v)}
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+              sortByDate
+                ? "bg-[#1B3A6B] text-white border-[#1B3A6B] shadow-sm"
+                : "bg-white text-slate-500 border-slate-200 hover:border-blue-300 hover:text-blue-700"
+            }`}
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            출간일순
+          </button>
+          <span className="text-xs text-slate-400">{filtered.length}권</span>
+        </div>
       </div>
 
       {/* ── 교재 리스트 ── */}
