@@ -282,16 +282,14 @@ export default function TextbooksClient() {
         <div className="ml-auto flex items-center gap-2">
           <button
             onClick={() => setSortByDate((v) => !v)}
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-all ${
-              sortByDate
-                ? "bg-[#1B3A6B] text-white border-[#1B3A6B] shadow-sm"
-                : "bg-white text-slate-500 border-slate-200 hover:border-blue-300 hover:text-blue-700"
+            className={`flex items-center gap-1 text-xs font-semibold transition-colors ${
+              sortByDate ? "text-[#1B3A6B]" : "text-slate-400 hover:text-slate-600"
             }`}
           >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
             출간일순
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h18M12 8v12M8 16l4 4 4-4" />
+            </svg>
           </button>
           <span className="text-xs text-slate-400">{filtered.length}권</span>
         </div>
