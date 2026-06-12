@@ -256,26 +256,41 @@ export default function TextbookDetailClient({ book }: { book: Book }) {
               <p className="text-sm font-semibold text-slate-700 mb-2.5">제공 서비스</p>
               <div className="grid grid-cols-3 gap-2">
                 {[
-                  { label: "MP3 바로 듣기", icon: "mp3",  needLogin: false },
-                  { label: "어휘출제마법사", icon: "star", needLogin: true  },
-                  { label: "문법예문뱅크",  icon: "db",   needLogin: true  },
-                ].map((svc) => (
-                  <button
-                    key={svc.label}
-                    onClick={svc.needLogin ? handleTeacherDownload : undefined}
-                    className="relative flex items-center gap-2 px-3 py-3 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 transition-colors text-left"
-                  >
-                    {svc.icon === "mp3"  && <Mp3Icon      className="w-4 h-4 text-slate-500 shrink-0" />}
-                    {svc.icon === "star" && <StarIcon     className="w-4 h-4 text-slate-500 shrink-0" />}
-                    {svc.icon === "db"   && <DatabaseIcon className="w-4 h-4 text-slate-500 shrink-0" />}
-                    <span className="flex-1 text-xs font-medium text-slate-700 truncate">{svc.label}</span>
-                    {svc.needLogin && (
-                      <span className="shrink-0 text-[10px] bg-orange-100 text-orange-600 border border-orange-200 px-1.5 py-0.5 rounded font-bold whitespace-nowrap">
-                        로그인
-                      </span>
-                    )}
-                  </button>
-                ))}
+                  { label: "MP3 바로 듣기", icon: "mp3",  needLogin: false, href: "https://miracle03945-eng.github.io/booksam-v3/resources.html?tab=study&stab=mp3"     },
+                  { label: "어휘출제마법사", icon: "star", needLogin: true,  href: null                                                                                    },
+                  { label: "문법예문뱅크",  icon: "db",   needLogin: true,  href: "https://miracle03945-eng.github.io/booksam-v3/resources.html?tab=study&stab=grammar"  },
+                ].map((svc) => {
+                  const cls = "relative flex items-center gap-2 px-3 py-3 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 transition-colors text-left w-full";
+                  const inner = (
+                    <>
+                      {svc.icon === "mp3"  && <Mp3Icon      className="w-4 h-4 text-slate-500 shrink-0" />}
+                      {svc.icon === "star" && <StarIcon     className="w-4 h-4 text-slate-500 shrink-0" />}
+                      {svc.icon === "db"   && <DatabaseIcon className="w-4 h-4 text-slate-500 shrink-0" />}
+                      <span className="flex-1 text-xs font-medium text-slate-700 truncate">{svc.label}</span>
+                      {svc.needLogin && (
+                        <span className="shrink-0 text-[10px] bg-orange-100 text-orange-600 border border-orange-200 px-1.5 py-0.5 rounded font-bold whitespace-nowrap">
+                          로그인
+                        </span>
+                      )}
+                    </>
+                  );
+                  if (!svc.needLogin && svc.href) {
+                    return <a key={svc.label} href={svc.href} target="_blank" rel="noopener noreferrer" className={cls}>{inner}</a>;
+                  }
+                  return (
+                    <button
+                      key={svc.label}
+                      onClick={() => {
+                        if (!isLoggedIn) { setTeacherAlert("login"); return; }
+                        if (!isTeacher)  { setTeacherAlert("noRole"); return; }
+                        if (svc.href) window.open(svc.href, "_blank", "noopener,noreferrer");
+                      }}
+                      className={cls}
+                    >
+                      {inner}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
