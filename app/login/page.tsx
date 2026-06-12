@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function LoginPage() {
   const [showSignup, setShowSignup] = useState(false);
@@ -8,6 +9,27 @@ export default function LoginPage() {
   if (showSignup) {
     return <SignupPage onBack={() => setShowSignup(false)} />;
   }
+
+  return (
+    <Suspense>
+      <LoginForm onSignup={() => setShowSignup(true)} />
+    </Suspense>
+  );
+}
+
+function LoginForm({ onSignup }: { onSignup: () => void }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [id, setId] = useState("");
+  const [pw, setPw] = useState("");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    localStorage.setItem("ytutor-auth", "1");
+    window.dispatchEvent(new Event("ytutor-auth-change"));
+    const next = searchParams.get("next") ?? "/my-class";
+    router.push(next);
+  };
 
   return (
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-12 bg-slate-50">
@@ -23,11 +45,13 @@ export default function LoginPage() {
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8">
           <h1 className="text-xl font-black text-slate-800 text-center mb-6">로그인</h1>
 
-          <form className="space-y-4">
+          <form className="space-y-4" onSubmit={handleSubmit}>
             <div>
               <label className="text-sm font-medium text-slate-700 block mb-1.5">아이디</label>
               <input
                 type="text"
+                value={id}
+                onChange={e => setId(e.target.value)}
                 placeholder="아이디를 입력하세요"
                 className="w-full text-sm border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
@@ -36,6 +60,8 @@ export default function LoginPage() {
               <label className="text-sm font-medium text-slate-700 block mb-1.5">비밀번호</label>
               <input
                 type="password"
+                value={pw}
+                onChange={e => setPw(e.target.value)}
                 placeholder="비밀번호를 입력하세요"
                 className="w-full text-sm border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
@@ -59,7 +85,7 @@ export default function LoginPage() {
             <p className="text-sm text-slate-500">
               아직 계정이 없으신가요?{" "}
               <button
-                onClick={() => setShowSignup(true)}
+                onClick={onSignup}
                 className="text-blue-600 font-semibold hover:underline"
               >
                 회원가입

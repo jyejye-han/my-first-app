@@ -2,6 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useMyMaterials, type SavedMaterial } from "../lib/useMyMaterials";
+import { useProfile } from "../lib/useProfile";
 
 /* ───────── 탭 정의 ───────── */
 type Tab = "profile" | "materials" | "orders";
@@ -71,6 +72,28 @@ function MaterialCard({ mat, onDelete }: { mat: SavedMaterial; onDelete: (id: st
 
 /* ───────── 탭: 프로필 ───────── */
 function ProfileTab() {
+  const { profile, save } = useProfile();
+  const [form, setForm] = useState(profile);
+  const [saved, setSaved] = useState(false);
+
+  // profile이 로드되면 form 동기화
+  const set = (key: keyof typeof form, value: string) =>
+    setForm(prev => ({ ...prev, [key]: value }));
+
+  const handleSave = () => {
+    save(form);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
+
+  const FIELDS: { label: string; key: keyof typeof form; readonly?: boolean }[] = [
+    { label: "이름",     key: "name" },
+    { label: "이메일",   key: "email" },
+    { label: "소속기관", key: "institution" },
+    { label: "담당과목", key: "subject" },
+    { label: "가입일",   key: "joinDate", readonly: true },
+  ];
+
   return (
     <div className="space-y-3">
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
@@ -79,22 +102,31 @@ function ProfileTab() {
           회원정보 수정
         </h3>
         <div className="space-y-0">
-          {[
-            { label: "이름",     value: "홍길동" },
-            { label: "이메일",   value: "hong@ybm.co.kr" },
-            { label: "소속기관", value: "YBM 어학원 강남점" },
-            { label: "담당과목", value: "영어 (독해, 문법)" },
-            { label: "가입일",   value: "2024년 3월 1일" },
-          ].map((field) => (
-            <div key={field.label} className="flex items-center justify-between py-2 border-b border-slate-100 last:border-0">
+          {FIELDS.map((field) => (
+            <div key={field.key} className="flex items-center gap-3 py-2 border-b border-slate-100 last:border-0">
               <span className="text-xs text-slate-500 w-20 shrink-0">{field.label}</span>
-              <span className="text-xs font-medium text-slate-800 flex-1">{field.value}</span>
-              <button className="text-[11px] text-blue-600 hover:underline shrink-0">수정</button>
+              {field.readonly ? (
+                <span className="text-xs font-medium text-slate-400 flex-1">{form[field.key]}</span>
+              ) : (
+                <input
+                  type="text"
+                  value={form[field.key]}
+                  onChange={e => set(field.key, e.target.value)}
+                  className="flex-1 text-xs font-medium text-slate-800 border border-transparent rounded-lg px-2 py-1 focus:outline-none focus:border-blue-400 focus:bg-blue-50 hover:border-slate-200 transition-colors"
+                />
+              )}
             </div>
           ))}
         </div>
-        <button className="mt-3 w-full bg-[#1B3A6B] hover:bg-[#163060] text-white py-2 rounded-lg font-semibold text-xs transition-colors">
-          정보 저장
+        <button
+          onClick={handleSave}
+          className={`mt-3 w-full py-2 rounded-lg font-semibold text-xs transition-colors ${
+            saved
+              ? "bg-green-500 text-white"
+              : "bg-[#1B3A6B] hover:bg-[#163060] text-white"
+          }`}
+        >
+          {saved ? "✓ 저장되었습니다" : "정보 저장"}
         </button>
       </div>
     </div>
@@ -321,11 +353,12 @@ function OrdersTab() {
 /* ───────── 메인 페이지 ───────── */
 export default function MyPage() {
   const [activeTab, setActiveTab] = useState<Tab>("profile");
+  const { profile } = useProfile();
 
   const tabs: { id: Tab; label: string; icon: string }[] = [
-    { id: "profile",   label: "프로필",        icon: "👤" },
-    { id: "materials", label: "내가 만든 자료", icon: "📝" },
+    { id: "profile",   label: "개인정보수정",   icon: "👤" },
     { id: "orders",    label: "주문내역",       icon: "🛒" },
+    { id: "materials", label: "내가 만든 자료", icon: "📝" },
   ];
 
   return (
@@ -337,20 +370,20 @@ export default function MyPage() {
         <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center text-3xl mx-auto mb-2">
           👩‍🏫
         </div>
-        <h2 className="font-black text-base">홍길동 강사님</h2>
-        <p className="text-blue-200 text-xs mt-0.5">hong@ybm.co.kr</p>
+        <h2 className="font-black text-base">{profile.name} 강사님</h2>
+        <p className="text-blue-200 text-xs mt-0.5">{profile.email}</p>
       </div>
 
       {/* 탭 네비게이션 */}
-      <div className="flex bg-slate-100 rounded-xl p-1 mb-5 gap-1">
+      <div className="flex border-b border-slate-200 mb-6">
         {tabs.map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-all ${
+            className={`flex items-center gap-1.5 px-5 py-3 text-sm font-bold transition-all border-b-2 -mb-px ${
               activeTab === tab.id
-                ? "bg-white text-slate-800 shadow-sm"
-                : "text-slate-500 hover:text-slate-700"
+                ? "border-[#1B3A6B] text-[#1B3A6B]"
+                : "border-transparent text-slate-400 hover:text-slate-600 hover:border-slate-300"
             }`}
           >
             <span>{tab.icon}</span>

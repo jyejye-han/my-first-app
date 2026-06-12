@@ -512,6 +512,7 @@ export default function RoadmapClient() {
 
   // ── Table state ──
   const [activeTab, setActiveTab] = useState("middle");
+  const [sectionTab, setSectionTab] = useState<"roadmap" | "curriculum">("roadmap");
   const activeTabConfig = LEVEL_TABS.find((t) => t.id === activeTab)!;
   const filtered = activeTab === "all" ? CURRICULUM : CURRICULUM.filter((b) => b.levelId === activeTab);
   const rows = flatten(filtered);
@@ -539,16 +540,38 @@ export default function RoadmapClient() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+
+      {/* 페이지 헤더 */}
+      <div>
+        <h1 className="text-2xl font-black text-slate-800">학습로드맵</h1>
+        <p className="text-slate-500 text-sm mt-1">학생 수준에 맞는 맞춤 교재 코스를 설계하고, 전체 커리큘럼을 참고하세요.</p>
+      </div>
+
+      {/* 섹션 탭 */}
+      <div className="flex gap-2 p-1 bg-slate-100 rounded-xl w-fit">
+        {([
+          { id: "roadmap" as const, label: "🗺️ 학습로드맵" },
+          { id: "curriculum" as const, label: "📚 전체교재 커리큘럼" },
+        ]).map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setSectionTab(tab.id)}
+            className={`px-6 py-2.5 rounded-lg text-sm font-bold border-2 transition-all duration-200 ${
+              sectionTab === tab.id
+                ? "bg-[#1B3A6B] border-[#1B3A6B] text-white shadow-md"
+                : "border-slate-300 text-slate-500 hover:border-slate-400 hover:text-slate-700 hover:bg-white/60"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
 
       {/* ══════════════════════════════════════
           SECTION 1 : 맞춤 로드맵 설계
       ══════════════════════════════════════ */}
-      <section>
-        <div className="mb-5">
-          <h1 className="text-2xl font-black text-slate-800">학습로드맵</h1>
-          <p className="text-slate-500 text-sm mt-1">학생 수준에 맞는 맞춤 교재 코스를 설계하고, 전체 커리큘럼을 참고하세요.</p>
-        </div>
+      {sectionTab === "roadmap" && <section>
 
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
           {/* 헤더 */}
@@ -691,7 +714,7 @@ export default function RoadmapClient() {
                     {Object.entries(monthGroups)
                       .sort(([a],[b]) => Number(a)-Number(b))
                       .map(([month, books]) => (
-                        <div key={month} className="shrink-0 w-44">
+                        <div key={month} className="shrink-0 w-72">
                           {/* 월 헤더 */}
                           <div className="text-center mb-2">
                             <span className="inline-block text-xs font-black text-slate-500 bg-slate-100 px-3 py-1 rounded-full">{month}개월차</span>
@@ -703,21 +726,21 @@ export default function RoadmapClient() {
                               return (
                                 <div key={j} className={`rounded-xl border p-3 ${ac.light}`}>
                                   {/* 영역 뱃지 */}
-                                  <span className={`inline-block text-[9px] font-black px-1.5 py-0.5 rounded-full text-white mb-2 ${ac.bg}`}>
+                                  <span className={`inline-block text-[11px] font-black px-1.5 py-0.5 rounded-full text-white mb-2 ${ac.bg}`}>
                                     {ac.label}
                                   </span>
                                   {/* 표지 */}
                                   {bk?.image ? (
-                                    <img src={bk.image} alt={book.title} className="w-10 h-14 object-cover rounded-lg shadow-sm border border-white mx-auto mb-2" />
+                                    <img src={bk.image} alt={book.title} className="w-[78px] h-[109px] object-cover rounded-lg shadow-sm border border-white mx-auto mb-2" />
                                   ) : (
-                                    <div className="w-10 h-14 bg-white rounded-lg shadow-sm flex items-center justify-center mx-auto mb-2 text-xl border">
+                                    <div className="w-[78px] h-[109px] bg-white rounded-lg shadow-sm flex items-center justify-center mx-auto mb-2 text-3xl border">
                                       {bk?.emoji ?? "📚"}
                                     </div>
                                   )}
                                   {/* 제목 */}
-                                  <p className={`text-[10px] font-bold leading-snug ${ac.color} text-center line-clamp-2`}>{book.title}</p>
+                                  <p className={`text-[20px] font-bold leading-snug ${ac.color} text-center line-clamp-2`}>{book.title}</p>
                                   {/* 팁 */}
-                                  <p className="text-[9px] text-slate-400 leading-snug mt-1 text-center">{book.tip}</p>
+                                  <p className="text-[11px] text-slate-400 leading-snug mt-1 text-center">{book.tip}</p>
                                 </div>
                               );
                             })}
@@ -743,15 +766,14 @@ export default function RoadmapClient() {
             </div>
           )}
         </div>
-      </section>
+      </section>}
 
       {/* ══════════════════════════════════════
           SECTION 2 : 전체 교재 커리큘럼 표
       ══════════════════════════════════════ */}
-      <section>
+      {sectionTab === "curriculum" && <section>
         <div className="mb-4">
-          <h2 className="text-lg font-black text-slate-800">전체 교재 커리큘럼</h2>
-          <p className="text-slate-500 text-sm mt-0.5">YBM 대표 교재들로 구성된 수준별 연간 커리큘럼입니다.</p>
+          <p className="text-slate-500 text-sm">YBM 대표 교재들로 구성된 수준별 연간 커리큘럼입니다.</p>
         </div>
 
         {/* 레벨 탭 */}
@@ -819,7 +841,7 @@ export default function RoadmapClient() {
         <p className="mt-4 text-xs text-slate-400 text-center">
           * 위 커리큘럼은 권장 순서이며, 학습자 수준에 따라 조정할 수 있습니다.
         </p>
-      </section>
+      </section>}
     </div>
   );
 }

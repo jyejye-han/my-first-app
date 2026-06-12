@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { useAuth } from "../lib/useAuth";
 
 const NAV = [
   {
@@ -76,6 +77,7 @@ export default function GNB() {
   const [levelFilter,    setLevelFilter]    = useState<string[]>([]);
   const pathname = usePathname();
   const router   = useRouter();
+  const { isLoggedIn, ready, logout } = useAuth();
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
 
@@ -98,7 +100,7 @@ export default function GNB() {
       {/* ── 1행: 로고 + 통합검색창 + 유틸리티 (흰색 배경) ── */}
       <div className="bg-white border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-4 py-3">
+          <div className="flex items-center gap-4 pt-[16px] pb-3">
 
             {/* 로고 */}
             <Link href="/" className="flex items-center gap-2 shrink-0">
@@ -115,7 +117,7 @@ export default function GNB() {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                  placeholder="교재명·저자·ISBN 통합검색"
+                  placeholder="교재명 통합검색"
                   className="flex-1 text-sm text-slate-700 px-4 py-2.5 focus:outline-none"
                 />
                 {/* 필터 버튼 */}
@@ -153,7 +155,7 @@ export default function GNB() {
                   <div className="flex items-center gap-3 flex-wrap">
                     <span className="text-sm font-semibold text-slate-700 shrink-0">이용대상</span>
                     <div className="flex gap-2">
-                      {["초등", "중등", "고등", "성인"].map((lv) => (
+                      {["초등", "중등", "고등"].map((lv) => (
                         <button
                           key={lv}
                           onClick={() => toggleLevel(lv)}
@@ -189,7 +191,7 @@ export default function GNB() {
             {/* 유틸리티 링크 */}
             <div className="hidden md:flex items-center gap-3 shrink-0">
               <a
-                href="https://miracle03945-eng.github.io/booksam/v2/"
+                href="https://miracle03945-eng.github.io/booksam-v3/"
                 target="_blank" rel="noopener noreferrer"
                 className="flex items-center gap-1 text-[11px] font-medium text-slate-500 hover:text-slate-800 transition-colors"
               >
@@ -199,12 +201,26 @@ export default function GNB() {
                 YBM북스 참고서
               </a>
               <span className="w-px h-3 bg-slate-200" />
-              <Link href="/login" className="flex items-center gap-1 text-[11px] font-medium text-slate-500 hover:text-slate-800 transition-colors">
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-                로그인
-              </Link>
+              {ready && isLoggedIn ? (
+                <button
+                  onClick={() => { logout(); router.push("/"); }}
+                  className="flex items-center gap-1 text-[11px] font-medium text-slate-500 hover:text-slate-800 transition-colors"
+                >
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                  로그아웃
+                </button>
+              ) : ready ? (
+                <Link href="/login" className="flex items-center gap-1 text-[11px] font-medium text-slate-500 hover:text-slate-800 transition-colors">
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  로그인
+                </Link>
+              ) : (
+                <span className="w-10 h-3 bg-slate-100 rounded animate-pulse" />
+              )}
               <span className="w-px h-3 bg-slate-200" />
               {/* 고객센터 드롭다운 */}
               <div className="relative group">
@@ -346,9 +362,18 @@ export default function GNB() {
             </Link>
           ))}
           <div className="border-t border-slate-200 pt-2 mt-2 space-y-1">
-            <Link href="/login" className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-slate-800" onClick={() => setMobileOpen(false)}>
-              로그인
-            </Link>
+            {isLoggedIn ? (
+              <button
+                onClick={() => { logout(); router.push("/"); setMobileOpen(false); }}
+                className="w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-slate-800 text-left"
+              >
+                로그아웃
+              </button>
+            ) : (
+              <Link href="/login" className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm text-slate-600 hover:bg-slate-100 hover:text-slate-800" onClick={() => setMobileOpen(false)}>
+                로그인
+              </Link>
+            )}
             {SUPPORT_MENU.map((item) =>
               item.href === "__issuetalk__" ? (
                 <button key="issuetalk" onClick={() => { setMobileOpen(false); setIssuetalkPopup(true); }}
@@ -380,7 +405,7 @@ export default function GNB() {
             </button>
             <img src="/images/ybmbooks-preview.png" alt="YBM북스 초중고 화면" className="w-full rounded-2xl shadow-2xl" />
             <div className="mt-4 flex justify-center">
-              <a href="https://www.ybmbooksam.com/html/main/index" target="_blank" rel="noopener noreferrer"
+              <a href="https://miracle03945-eng.github.io/booksam-v3/" target="_blank" rel="noopener noreferrer"
                 onClick={() => setYbmbooksPopup(false)}
                 className="flex items-center gap-2 px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl shadow-lg transition-colors">
                 YBM북스 초중고 바로가기

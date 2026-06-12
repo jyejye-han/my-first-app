@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useMyClassBooks } from "../lib/useMyClassBooks";
 import { useMyMaterials, type SavedMaterial } from "../lib/useMyMaterials";
+import { useAuth } from "../lib/useAuth";
 
 const LESSON_MATERIALS = [
   { id: "vocab",     label: "어휘리스트",  icon: "📝", type: "PDF",  color: "text-rose-500",   border: "border-rose-200",   bg: "bg-rose-50"   },
@@ -289,6 +290,7 @@ function BookMaterialCard({ mat, onDelete }: { mat: SavedMaterial; onDelete: (id
 }
 
 export default function MyClassClient() {
+  const { isLoggedIn, ready } = useAuth();
   const { ids: myBookIds, removeBook } = useMyClassBooks();
   const { materials, remove: removeMaterial } = useMyMaterials();
   const [selectedId, setSelectedId] = useState<string>("");
@@ -385,6 +387,36 @@ export default function MyClassClient() {
   const dlRight = dlFiltered.filter((_, i) => i % 2 === 1);
   const dlAllIds = dlFiltered.map(f => f.id);
   const dlAllChecked = dlAllIds.length > 0 && dlAllIds.every(id => selectedFiles.includes(id));
+
+  if (!ready) return null;
+
+  if (!isLoggedIn) {
+    return (
+      <div className="flex min-h-[calc(100vh-64px)] bg-slate-50 items-center justify-center px-4">
+        <div className="text-center max-w-sm">
+          <div className="w-24 h-24 mx-auto mb-6 bg-slate-100 rounded-full flex items-center justify-center">
+            <svg className="w-12 h-12 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-black text-slate-800 mb-2">마이클래스</h2>
+          <p className="text-slate-500 text-sm mb-6 leading-relaxed">
+            로그인 후 이용 가능합니다.<br />
+            교재를 담고 수업 자료를 한 곳에서 관리해 보세요.
+          </p>
+          <Link
+            href="/login?next=/my-class"
+            className="inline-flex items-center gap-2 px-8 py-3 bg-[#1B3A6B] hover:bg-[#163060] text-white font-bold rounded-xl transition-colors text-sm"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+            </svg>
+            로그인
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
