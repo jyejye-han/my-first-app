@@ -229,10 +229,11 @@ export default function TextbookDetailClient({ book }: { book: Book }) {
                   </svg>
                   마이클래스 담기
                 </button>
-                <a href="https://www.ybmcloud.com/connecting/content?siteType=E" target="_blank" rel="noopener noreferrer"
+                <Link
+                  href={`/edutech/connecting-book/viewer?bookId=${book.id}`}
                   className="flex items-center gap-1.5 px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white text-xs font-semibold rounded-xl transition-colors">
                   커넥팅북
-                </a>
+                </Link>
               </div>
             </div>
 
