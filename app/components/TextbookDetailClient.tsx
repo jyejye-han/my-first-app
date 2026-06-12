@@ -262,16 +262,14 @@ export default function TextbookDetailClient({ book }: { book: Book }) {
                   <button
                     key={svc.label}
                     onClick={svc.needLogin ? handleTeacherDownload : undefined}
-                    className="relative flex flex-col items-start gap-1.5 px-3 py-3 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 transition-colors text-left"
+                    className="relative flex items-center gap-2 px-3 py-3 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 transition-colors text-left"
                   >
-                    <div className="flex items-center gap-2 w-full">
-                      {svc.icon === "mp3"  && <Mp3Icon      className="w-4 h-4 text-slate-500 shrink-0" />}
-                      {svc.icon === "star" && <StarIcon     className="w-4 h-4 text-slate-500 shrink-0" />}
-                      {svc.icon === "db"   && <DatabaseIcon className="w-4 h-4 text-slate-500 shrink-0" />}
-                      <span className="text-xs font-medium text-slate-700 truncate">{svc.label}</span>
-                    </div>
+                    {svc.icon === "mp3"  && <Mp3Icon      className="w-4 h-4 text-slate-500 shrink-0" />}
+                    {svc.icon === "star" && <StarIcon     className="w-4 h-4 text-slate-500 shrink-0" />}
+                    {svc.icon === "db"   && <DatabaseIcon className="w-4 h-4 text-slate-500 shrink-0" />}
+                    <span className="flex-1 text-xs font-medium text-slate-700 truncate">{svc.label}</span>
                     {svc.needLogin && (
-                      <span className="text-[10px] bg-orange-100 text-orange-600 border border-orange-200 px-1.5 py-0.5 rounded font-bold">
+                      <span className="shrink-0 text-[10px] bg-orange-100 text-orange-600 border border-orange-200 px-1.5 py-0.5 rounded font-bold whitespace-nowrap">
                         로그인
                       </span>
                     )}
@@ -299,24 +297,29 @@ export default function TextbookDetailClient({ book }: { book: Book }) {
                 ].map((file) => (
                   <button
                     key={file.id}
+                    onClick={!file.free ? handleTeacherDownload : undefined}
                     className={`flex items-center gap-2 px-3 py-3 rounded-lg border text-left transition-colors ${
                       file.free
                         ? "border-slate-200 bg-white hover:bg-slate-50"
-                        : "border-slate-200 bg-slate-50/60 cursor-default"
+                        : "border-slate-200 bg-white hover:bg-slate-50"
                     }`}
                   >
                     {file.icon === "mp3" ? (
-                      <Mp3Icon className={`w-4 h-4 shrink-0 ${file.free ? "text-slate-500" : "text-slate-300"}`} />
+                      <Mp3Icon className={`w-4 h-4 shrink-0 ${file.free ? "text-slate-500" : "text-slate-400"}`} />
                     ) : (
-                      <DocIcon className={`w-4 h-4 shrink-0 ${file.free ? "text-slate-500" : "text-slate-300"}`} />
+                      <DocIcon className={`w-4 h-4 shrink-0 ${file.free ? "text-slate-500" : "text-slate-400"}`} />
                     )}
-                    <span className={`flex-1 text-xs font-medium truncate ${file.free ? "text-slate-700" : "text-slate-400"}`}>
+                    <span className={`flex-1 text-xs font-medium truncate ${file.free ? "text-slate-700" : "text-slate-600"}`}>
                       {file.label}
                     </span>
-                    {!file.free && (
-                      <span className="shrink-0 text-[10px] bg-orange-100 text-orange-600 border border-orange-200 px-1.5 py-0.5 rounded font-bold">
+                    {!file.free ? (
+                      <span className="shrink-0 text-[10px] bg-orange-100 text-orange-600 border border-orange-200 px-1.5 py-0.5 rounded font-bold whitespace-nowrap">
                         로그인
                       </span>
+                    ) : (
+                      <svg className="w-3.5 h-3.5 shrink-0 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                      </svg>
                     )}
                   </button>
                 ))}
