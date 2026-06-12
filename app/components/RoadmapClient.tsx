@@ -568,9 +568,7 @@ export default function RoadmapClient() {
         ))}
       </div>
 
-      {/* ══════════════════════════════════════
-          SECTION 1 : 맞춤 로드맵 설계
-      ══════════════════════════════════════ */}
+      {/* SECTION 1 : 맞춤 로드맵 설계 */}
       {sectionTab === "roadmap" && <section>
 
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
@@ -768,9 +766,7 @@ export default function RoadmapClient() {
         </div>
       </section>}
 
-      {/* ══════════════════════════════════════
-          SECTION 2 : 전체 교재 커리큘럼 표
-      ══════════════════════════════════════ */}
+      {/* SECTION 2 : 전체 교재 커리큘럼 표 */}
       {sectionTab === "curriculum" && <section>
         <div className="mb-4">
           <p className="text-slate-500 text-sm">YBM 대표 교재들로 구성된 수준별 연간 커리큘럼입니다.</p>
