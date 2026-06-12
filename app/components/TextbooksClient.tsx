@@ -178,7 +178,7 @@ export default function TextbooksClient() {
       return (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0);
     });
 
-  const pinnedBooks = BOOKS.filter((b) => pinned.includes(b.id));
+  const pinnedBooks = isLoggedIn ? BOOKS.filter((b) => pinned.includes(b.id)) : [];
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -377,12 +377,12 @@ export default function TextbooksClient() {
                 <button
                   onClick={() => togglePin(book.id)}
                   className={`w-full text-center text-xs py-2 rounded-lg font-semibold transition-all leading-tight ${
-                    pinned.includes(book.id)
+                    isLoggedIn && pinned.includes(book.id)
                       ? "bg-blue-100 text-blue-700 border border-blue-300"
                       : "bg-[#1B3A6B] hover:bg-[#163060] text-white"
                   }`}
                 >
-                  {pinned.includes(book.id) ? "✓ 담김" : "마이클래스 담기"}
+                  {isLoggedIn && pinned.includes(book.id) ? "✓ 담김" : "마이클래스 담기"}
                 </button>
                 {/* 툴팁 */}
                 <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-52 bg-slate-800 text-white text-[11px] rounded-xl px-3 py-2.5 leading-relaxed opacity-0 group-hover/tip:opacity-100 pointer-events-none transition-opacity duration-150 z-20 text-center shadow-xl whitespace-normal">
