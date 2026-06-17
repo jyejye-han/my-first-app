@@ -219,6 +219,15 @@ const COMMON_FILE_ITEMS = [
   { id: "10", name: "Test Sheets",                type: "PDF", category: "평가용" },
 ];
 
+const UNIT_FILE_TEMPLATES = [
+  { suffix: "PPT",        type: "PPT", category: "수업용" },
+  { suffix: "Word_List",  type: "PDF", category: "수업용" },
+  { suffix: "Worksheet",  type: "PDF", category: "수업용" },
+  { suffix: "MP3",        type: "mp3", category: "수업용" },
+  { suffix: "Test_Sheet", type: "PDF", category: "평가용" },
+  { suffix: "Answer_Key", type: "PDF", category: "평가용" },
+];
+
 const FILE_TYPE_STYLE: Record<string, { bg: string; label: string }> = {
   PDF: { bg: "bg-red-500",    label: "PDF" },
   mp3: { bg: "bg-blue-500",   label: "mp3" },
@@ -350,10 +359,21 @@ export default function MyClassClient() {
   // 자료 보기 팝업 (레슨별)
   const [viewPopup, setViewPopup] = useState<{ index: number; title: string } | null>(null);
 
+  // 목차 / 자료 다운로드 탭
+  const [tocTab, setTocTab] = useState<"download" | "lesson">("download");
+
   // 목차 펼침 상태 (첫 번째 레슨 기본 오픈)
   const [expandedLessons, setExpandedLessons] = useState<Set<number>>(new Set([0]));
   const toggleLesson = (i: number) => {
     setExpandedLessons(prev => {
+      const next = new Set(prev);
+      if (next.has(i)) next.delete(i); else next.add(i);
+      return next;
+    });
+  };
+  const [expandedDlLessons, setExpandedDlLessons] = useState<Set<number>>(new Set());
+  const toggleDlLesson = (i: number) => {
+    setExpandedDlLessons(prev => {
       const next = new Set(prev);
       if (next.has(i)) next.delete(i); else next.add(i);
       return next;
@@ -379,7 +399,8 @@ export default function MyClassClient() {
     id: `unit-${i}`, name: `Unit ${i + 1}_Teaching Materials`, type: "ZIP", category: "수업용",
   })) : [];
   const dlAllFiles = [...COMMON_FILE_ITEMS, ...dlUnitFiles];
-  const dlFiltered = dlAllFiles.filter(f =>
+  // 공통자료 섹션용 필터
+  const dlFiltered = COMMON_FILE_ITEMS.filter(f =>
     (categoryFilter === "전체" || f.category === categoryFilter) &&
     (typeFilter === "전체" || f.type === typeFilter)
   );
@@ -420,7 +441,8 @@ export default function MyClassClient() {
 
   return (
     <>
-    <div className="flex min-h-[calc(100vh-64px)] bg-slate-50">
+    <div className="min-h-[calc(100vh-64px)] bg-slate-50">
+    <div className="max-w-[1280px] mx-auto flex min-h-[calc(100vh-64px)]">
 
       {/* ── 왼쪽 사이드바 ── */}
       <aside className="w-60 shrink-0 bg-white border-r border-slate-200 flex flex-col sticky top-0 h-[calc(100vh-64px)] overflow-y-auto">
@@ -563,7 +585,8 @@ export default function MyClassClient() {
       </aside>
 
       {/* ── 메인 콘텐츠 ── */}
-      <main className="flex-1 min-w-0 px-9 py-9 pr-56">
+      <main className="flex-1 min-w-0 py-9 px-8">
+        <div>
 
         {/* 페이지 타이틀 */}
         <div className="mb-7">
@@ -757,39 +780,42 @@ export default function MyClassClient() {
                 </button>
               </div>
 
-              {/* 서비스 버튼 */}
-              <div className="grid grid-cols-3 gap-2.5">
-                {TOOLS.map((tool) => {
-                  const cls = `flex items-center gap-2.5 px-4 py-3 rounded-xl border-2 ${tool.border} bg-white transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 duration-150`;
-                  const inner = (
-                    <>
-                      <span className={`shrink-0 ${tool.color}`}>{tool.icon}</span>
-                      <span className={`text-xs font-bold leading-tight ${tool.color}`}>{tool.label}</span>
-                    </>
-                  );
-                  if (tool.href === "__connecting__") {
-                    return <Link key={tool.label} href={`/edutech/connecting-book/viewer?bookId=${selectedId}`} className={cls}>{inner}</Link>;
-                  }
-                  if (tool.href === "/edutech/vocab-wizard") {
-                    return <Link key={tool.label} href={`/edutech/vocab-wizard?bookId=${selectedId}`} className={cls}>{inner}</Link>;
-                  }
-                  if (tool.href === "__online__") {
-                    return <button key={tool.label} onClick={() => setOnlinePopup(true)} className={cls}>{inner}</button>;
-                  }
-                  if (tool.href === "__class-game__") {
-                    return <Link key={tool.label} href={`/edutech/class-game?bookId=${selectedId}`} className={cls}>{inner}</Link>;
-                  }
-                  if (tool.href === "__ai-material__") {
-                    return <Link key={tool.label} href={`/edutech/ai-material?bookId=${selectedId}&bookTitle=${encodeURIComponent(book.title)}`} className={cls}>{inner}</Link>;
-                  }
-                  return tool.href.startsWith("http") ? (
-                    <a key={tool.label} href={tool.href} target="_blank" rel="noopener noreferrer" className={cls}>{inner}</a>
-                  ) : (
-                    <Link key={tool.label} href={tool.href} className={cls}>{inner}</Link>
-                  );
-                })}
-              </div>
             </div>
+          </div>
+        </div>
+
+        {/* ── 서비스 버튼 ── */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm px-5 py-4 mb-5">
+          <div className="grid grid-cols-5 gap-2.5">
+            {TOOLS.map((tool) => {
+              const cls = `flex items-center gap-2.5 px-4 py-3 rounded-xl border-2 ${tool.border} bg-white transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 duration-150`;
+              const inner = (
+                <>
+                  <span className={`shrink-0 ${tool.color}`}>{tool.icon}</span>
+                  <span className={`text-xs font-bold leading-tight ${tool.color}`}>{tool.label}</span>
+                </>
+              );
+              if (tool.href === "__connecting__") {
+                return <Link key={tool.label} href={`/edutech/connecting-book/viewer?bookId=${selectedId}`} className={cls}>{inner}</Link>;
+              }
+              if (tool.href === "/edutech/vocab-wizard") {
+                return <Link key={tool.label} href={`/edutech/vocab-wizard?bookId=${selectedId}`} className={cls}>{inner}</Link>;
+              }
+              if (tool.href === "__online__") {
+                return <button key={tool.label} onClick={() => setOnlinePopup(true)} className={cls}>{inner}</button>;
+              }
+              if (tool.href === "__class-game__") {
+                return <Link key={tool.label} href={`/edutech/class-game?bookId=${selectedId}`} className={cls}>{inner}</Link>;
+              }
+              if (tool.href === "__ai-material__") {
+                return <Link key={tool.label} href={`/edutech/ai-material?bookId=${selectedId}&bookTitle=${encodeURIComponent(book.title)}`} className={cls}>{inner}</Link>;
+              }
+              return tool.href.startsWith("http") ? (
+                <a key={tool.label} href={tool.href} target="_blank" rel="noopener noreferrer" className={cls}>{inner}</a>
+              ) : (
+                <Link key={tool.label} href={tool.href} className={cls}>{inner}</Link>
+              );
+            })}
           </div>
         </div>
 
@@ -829,79 +855,334 @@ export default function MyClassClient() {
           </div>
         </div>
 
-        {/* ── 목차 ── */}
-        <div className="rounded-2xl border border-[#1B3A6B]/20 overflow-hidden shadow-sm">
-          <div className="flex items-center gap-2.5 px-6 py-3.5 bg-[#1B3A6B]">
-            <svg className="w-5 h-5 text-blue-200 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h7" />
-            </svg>
-            <span className="text-white font-bold text-base">목차</span>
-            <span className="ml-auto text-blue-300 text-sm">{book.toc.length}단원</span>
+        {/* ── 목차 / 선생님용 자료 다운로드 ── */}
+        <div className="rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+
+          {/* 탭 헤더 */}
+          <div className="flex">
+            <button
+              onClick={() => setTocTab("download")}
+              className={`flex-1 py-4 text-sm font-bold transition-colors border-r border-slate-200 flex items-center justify-center gap-2 ${
+                tocTab === "download" ? "bg-[#1B3A6B] text-white" : "bg-white text-slate-500 hover:bg-slate-50"
+              }`}
+            >
+              {tocTab === "download" && (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+              선생님용 자료 다운로드
+            </button>
+            <button
+              onClick={() => setTocTab("lesson")}
+              className={`flex-1 py-4 text-sm font-bold transition-colors ${
+                tocTab === "lesson" ? "bg-[#1B3A6B] text-white" : "bg-white text-slate-500 hover:bg-slate-50"
+              }`}
+            >
+              단원별 수업하기
+            </button>
           </div>
-          <ul className="divide-y divide-slate-100 bg-white">
-            {book.toc.map((lesson, i) => {
-              const isOpen = expandedLessons.has(i);
-              return (
-                <li key={i}>
-                  {/* 레슨 헤더 행 */}
-                  <div className={`flex items-center gap-4 px-5 py-3.5 ${isOpen ? "bg-slate-50" : "bg-white hover:bg-slate-50"} transition-colors`}>
-                    {/* 번호 뱃지 */}
-                    <span className="w-8 h-8 rounded-full bg-[#1B3A6B] text-white flex items-center justify-center text-xs font-black shrink-0">
-                      {String(i + 1).padStart(2, "0")}
-                    </span>
-                    {/* 레슨 제목 */}
-                    <span className="flex-1 text-base font-bold text-slate-800 truncate">{lesson.title}</span>
-                    {/* 액션 버튼 */}
-                    <div className="flex items-center gap-2 shrink-0">
-                      {/* 펼침 버튼 */}
-                      <button
-                        onClick={() => toggleLesson(i)}
-                        className={`w-8 h-8 flex items-center justify-center rounded-lg border transition-all ${
-                          isOpen
-                            ? "bg-[#1B3A6B] border-[#1B3A6B] text-white"
-                            : "border-slate-200 bg-white text-slate-500 hover:border-[#1B3A6B] hover:text-[#1B3A6B]"
-                        }`}
-                      >
-                        <svg
-                          className={`w-4 h-4 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
-                          fill="none" stroke="currentColor" viewBox="0 0 24 24"
+
+          {/* ─ 단원별 수업하기 ─ */}
+          {tocTab === "lesson" && (
+            <ul className="divide-y divide-slate-100 bg-white">
+              {book.toc.map((lesson, i) => {
+                const isOpen = expandedLessons.has(i);
+                return (
+                  <li key={i}>
+                    <div className={`flex items-center gap-4 px-5 py-3.5 ${isOpen ? "bg-slate-50" : "bg-white hover:bg-slate-50"} transition-colors`}>
+                      <span className="w-8 h-8 rounded-full bg-[#1B3A6B] text-white flex items-center justify-center text-xs font-black shrink-0">
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
+                      <span className="flex-1 text-base font-bold text-slate-800 truncate">{lesson.title}</span>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          onClick={() => toggleLesson(i)}
+                          className={`w-8 h-8 flex items-center justify-center rounded-lg border transition-all ${
+                            isOpen ? "bg-[#1B3A6B] border-[#1B3A6B] text-white" : "border-slate-200 bg-white text-slate-500 hover:border-[#1B3A6B] hover:text-[#1B3A6B]"
+                          }`}
                         >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </button>
+                          <svg className={`w-4 h-4 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
+                    {isOpen && (
+                      <ul className="bg-slate-50/70 border-t border-slate-100">
+                        {lesson.subItems.map((sub, j) => (
+                          <li key={j} className="flex items-center gap-4 pl-10 pr-5 py-3 border-b border-slate-100 last:border-0 hover:bg-blue-50/40 transition-colors group">
+                            <div className="w-px h-8 bg-slate-300 shrink-0 rounded-full" />
+                            <div className="flex-1 min-w-0">
+                              <span className="text-sm font-semibold text-slate-700 group-hover:text-slate-900 block truncate">{sub.label}</span>
+                              <span className="text-xs text-slate-400">{sub.pages}</span>
+                            </div>
+                            <button
+                              onClick={() => setLessonPreviewPopup(true)}
+                              className="flex items-center gap-2 px-5 py-2.5 bg-teal-500 hover:bg-teal-600 text-white text-sm font-bold rounded-xl transition-colors shadow-sm whitespace-nowrap mr-2"
+                            >
+                              <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                              수업안 만들기
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+
+          {/* ─ 선생님용 자료 다운로드 ─ */}
+          {tocTab === "download" && (
+            <div className="bg-white">
+              {/* 분류 필터 */}
+              <div className="flex items-center gap-4 px-6 py-3.5 border-b border-slate-100">
+                <span className="text-sm font-bold text-slate-700 w-16 shrink-0">분류</span>
+                <div className="flex gap-2">
+                  {(["전체","평가용","수업용"] as const).map(c => (
+                    <button key={c} onClick={() => setCategoryFilter(c)}
+                      className={`px-4 py-1.5 rounded-full text-sm font-semibold border transition-all ${
+                        categoryFilter === c ? "bg-[#1B3A6B]/10 border-[#1B3A6B] text-[#1B3A6B]" : "border-slate-200 text-slate-500 hover:border-slate-300"
+                      }`}>{c}</button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 파일 유형 필터 */}
+              <div className="flex items-center gap-4 px-6 py-3.5 border-b border-slate-100">
+                <span className="text-sm font-bold text-slate-700 w-16 shrink-0">파일 유형</span>
+                <div className="flex gap-2 flex-wrap">
+                  {[
+                    { label: "전체", value: "전체" },
+                    { label: "HWP",  value: "HWP"  },
+                    { label: "PDF",  value: "PDF"  },
+                    { label: "PPT",  value: "PPT"  },
+                    { label: "기타",  value: "ZIP"  },
+                  ].map(({ label, value }) => (
+                    <button key={value} onClick={() => setTypeFilter(value)}
+                      className={`px-4 py-1.5 rounded-full text-sm font-semibold border transition-all ${
+                        typeFilter === value ? "bg-[#1B3A6B]/10 border-[#1B3A6B] text-[#1B3A6B]" : "border-slate-200 text-slate-500 hover:border-slate-300"
+                      }`}>{label}</button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 공통자료 섹션 헤더 */}
+              <div
+                className="flex items-center justify-between px-6 py-3.5 bg-slate-50 border-b border-slate-200 cursor-pointer select-none"
+                onClick={() => setCommonExpanded(v => !v)}
+              >
+                <span className="font-bold text-slate-700">공통자료</span>
+                <span className="w-7 h-7 flex items-center justify-center rounded-full bg-[#1B3A6B] text-white shrink-0">
+                  <svg className={`w-4 h-4 transition-transform duration-200 ${commonExpanded ? "" : "rotate-180"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 15l7-7 7 7" />
+                  </svg>
+                </span>
+              </div>
+
+              {commonExpanded && (
+                <div className="px-6 pt-4 pb-4">
+                  {/* 헤더 행: 전체선택 + 다운로드/스크랩 버튼 */}
+                  <div className="flex items-center gap-3 pb-3 mb-1 border-b border-slate-200">
+                    <input
+                      type="checkbox"
+                      checked={dlAllChecked}
+                      onChange={() => {
+                        if (dlAllChecked) {
+                          setSelectedFiles(prev => prev.filter(id => !dlAllIds.includes(id)));
+                        } else {
+                          setSelectedFiles(prev => [...new Set([...prev, ...dlAllIds])]);
+                          triggerCartBounce();
+                        }
+                      }}
+                      className="w-4 h-4 rounded accent-[#1B3A6B] cursor-pointer shrink-0"
+                    />
+                    <span className="text-sm font-bold text-slate-700 flex-1">공통자료</span>
+                    <button
+                      onClick={showToast}
+                      className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-300 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors"
+                    >
+                      다운로드
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => {
+                        const toAdd = dlFiltered.filter(f => selectedFiles.includes(f.id));
+                        setScrapItems(prev => {
+                          const existIds = new Set(prev.map(s => s.id));
+                          return [...prev, ...toAdd.filter(f => !existIds.has(f.id))];
+                        });
+                        setSelectedFiles([]);
+                        showScrapToast();
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-300 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors"
+                    >
+                      스크랩
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                      </svg>
+                    </button>
                   </div>
 
-                  {/* 하위 차시 목록 */}
-                  {isOpen && (
-                    <ul className="bg-slate-50/70 border-t border-slate-100">
-                      {lesson.subItems.map((sub, j) => (
-                        <li key={j} className="flex items-center gap-4 pl-10 pr-5 py-3 border-b border-slate-100 last:border-0 hover:bg-blue-50/40 transition-colors group">
-                          {/* 왼쪽 세로선 + 들여쓰기 */}
-                          <div className="w-px h-8 bg-slate-300 shrink-0 rounded-full" />
-                          {/* 차시 내용 */}
-                          <div className="flex-1 min-w-0">
-                            <span className="text-sm font-semibold text-slate-700 group-hover:text-slate-900 block truncate">{sub.label}</span>
-                            <span className="text-xs text-slate-400">{sub.pages}</span>
-                          </div>
-                          {/* 수업안 만들기 버튼 */}
-                          <button
-                            onClick={() => setLessonPreviewPopup(true)}
-                            className="flex items-center gap-2 px-5 py-2.5 bg-teal-500 hover:bg-teal-600 text-white text-sm font-bold rounded-xl transition-colors shadow-sm whitespace-nowrap mr-2"
-                          >
-                            <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </svg>
-                            수업안 만들기
-                          </button>
-                        </li>
+                  {/* 2열 파일 목록 */}
+                  {dlFiltered.length === 0 ? (
+                    <p className="text-sm text-slate-400 py-4 text-center">해당하는 자료가 없습니다.</p>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-x-8">
+                      {[dlLeft, dlRight].map((col, ci) => (
+                        <ul key={ci} className="divide-y divide-slate-100">
+                          {col.map(f => {
+                            const ts = FILE_TYPE_STYLE[f.type] ?? { bg: "bg-slate-400", label: f.type };
+                            const isChecked = selectedFiles.includes(f.id);
+                            return (
+                              <li key={f.id} className="flex items-center gap-2.5 py-3 group">
+                                <input
+                                  type="checkbox"
+                                  checked={isChecked}
+                                  onChange={() => toggleFile(f.id)}
+                                  className="w-4 h-4 rounded accent-[#1B3A6B] cursor-pointer shrink-0"
+                                />
+                                <span className={`${ts.bg} text-white text-[10px] font-black px-1.5 py-0.5 rounded shrink-0`}>{ts.label}</span>
+                                <span className="flex-1 text-sm text-slate-700 truncate min-w-0">
+                                  <span className="text-slate-400">{dlCode}_</span>{f.name}
+                                </span>
+                                <div className="flex items-center gap-2 text-slate-300 group-hover:text-slate-400 shrink-0">
+                                  <button className="hover:text-slate-600 transition-colors">
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                    </svg>
+                                  </button>
+                                  <button className="hover:text-slate-600 transition-colors" onClick={showToast}>
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                    </svg>
+                                  </button>
+                                  <button
+                                    className="hover:text-slate-600 transition-colors"
+                                    onClick={() => {
+                                      setScrapItems(prev => prev.find(s => s.id === f.id) ? prev : [...prev, { id: f.id, name: f.name, type: f.type }]);
+                                      showScrapToast();
+                                    }}
+                                  >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                                    </svg>
+                                  </button>
+                                </div>
+                              </li>
+                            );
+                          })}
+                        </ul>
                       ))}
-                    </ul>
+                    </div>
                   )}
-                </li>
-              );
-            })}
-          </ul>
+                </div>
+              )}
+
+              {/* 단원별 자료 */}
+              {book.toc.map((lesson, i) => {
+                const isOpen = expandedDlLessons.has(i);
+                return (
+                  <div key={i}>
+                    {/* 단원 헤더 */}
+                    <div
+                      className="flex items-center justify-between px-6 py-3.5 bg-slate-50 border-b border-slate-200 cursor-pointer select-none"
+                      onClick={() => toggleDlLesson(i)}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="w-7 h-7 rounded-full bg-[#1B3A6B] text-white flex items-center justify-center text-xs font-black shrink-0">
+                          {String(i + 1).padStart(2, "0")}
+                        </span>
+                        <span className="font-bold text-slate-700">{lesson.title}</span>
+                      </div>
+                      <span className="w-7 h-7 flex items-center justify-center rounded-full bg-[#1B3A6B] text-white shrink-0">
+                        <svg className={`w-4 h-4 transition-transform duration-200 ${isOpen ? "" : "rotate-180"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 15l7-7 7 7" />
+                        </svg>
+                      </span>
+                    </div>
+
+                    {/* 단원별 파일 목록 */}
+                    {isOpen && (() => {
+                      const unitNum = String(i + 1).padStart(2, "0");
+                      const unitFiles = UNIT_FILE_TEMPLATES.map((t, j) => ({
+                        id: `u${i}-${j}`,
+                        name: `Unit${unitNum}_${t.suffix}`,
+                        type: t.type,
+                        category: t.category,
+                      })).filter(f =>
+                        (categoryFilter === "전체" || f.category === categoryFilter) &&
+                        (typeFilter === "전체" || f.type === typeFilter)
+                      );
+                      const uLeft  = unitFiles.filter((_, k) => k % 2 === 0);
+                      const uRight = unitFiles.filter((_, k) => k % 2 === 1);
+                      return (
+                        <div className="px-6 pt-3 pb-4 bg-white border-b border-slate-100">
+                          {unitFiles.length === 0 ? (
+                            <p className="text-sm text-slate-400 py-3 text-center">해당하는 자료가 없습니다.</p>
+                          ) : (
+                            <div className="grid grid-cols-2 gap-x-8">
+                              {[uLeft, uRight].map((col, ci) => (
+                                <ul key={ci} className="divide-y divide-slate-100">
+                                  {col.map(f => {
+                                    const ts = FILE_TYPE_STYLE[f.type] ?? { bg: "bg-slate-400", label: f.type };
+                                    const isChecked = selectedFiles.includes(f.id);
+                                    return (
+                                      <li key={f.id} className="flex items-center gap-2.5 py-3 group">
+                                        <input
+                                          type="checkbox"
+                                          checked={isChecked}
+                                          onChange={() => toggleFile(f.id)}
+                                          className="w-4 h-4 rounded accent-[#1B3A6B] cursor-pointer shrink-0"
+                                        />
+                                        <span className={`${ts.bg} text-white text-[10px] font-black px-1.5 py-0.5 rounded shrink-0`}>{ts.label}</span>
+                                        <span className="flex-1 text-sm text-slate-700 truncate min-w-0">
+                                          <span className="text-slate-400">{dlCode}_</span>{f.name}
+                                        </span>
+                                        <div className="flex items-center gap-2 text-slate-300 group-hover:text-slate-400 shrink-0">
+                                          <button className="hover:text-slate-600 transition-colors">
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                            </svg>
+                                          </button>
+                                          <button className="hover:text-slate-600 transition-colors" onClick={showToast}>
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                            </svg>
+                                          </button>
+                                          <button
+                                            className="hover:text-slate-600 transition-colors"
+                                            onClick={() => {
+                                              setScrapItems(prev => prev.find(s => s.id === f.id) ? prev : [...prev, { id: f.id, name: f.name, type: f.type }]);
+                                              showScrapToast();
+                                            }}
+                                          >
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                                            </svg>
+                                          </button>
+                                        </div>
+                                      </li>
+                                    );
+                                  })}
+                                </ul>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* ── 내가 만든 자료 + 스크랩 자료 ── */}
@@ -986,7 +1267,9 @@ export default function MyClassClient() {
         })()}
 
         </> )}
+        </div>
       </main>
+    </div>
     </div>
 
 

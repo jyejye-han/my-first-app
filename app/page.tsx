@@ -1,4 +1,6 @@
 import Link from "next/link";
+import HomePersonalSection from "./components/HomePersonalSection";
+import HomeBannerSlider from "./components/HomeBannerSlider";
 
 const banners = [
   {
@@ -52,23 +54,22 @@ const recommendedBooks = [
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen">
-      {/* Hero */}
-      <section className="bg-[#1B3A6B] text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-[58px] md:pt-[77px] pb-[58px] md:pb-[77px]">
-          <div className="text-center">
-            <p className="text-blue-300 text-sm font-medium mb-2 tracking-wider uppercase">YBM 강사 전용 플랫폼</p>
-            <h1 className="text-[36px] md:text-[44px] font-black tracking-tight mb-3">
-              스마트한 수업, <span className="text-amber-400">Y튜터</span>와 함께
-            </h1>
-            <p className="text-blue-200 text-[19px] md:text-[21px]">
-              교재·수업도구·학습로드맵을 한 곳에서 관리하세요
-            </p>
+    <div className="min-h-screen bg-slate-50">
+
+      {/* Hero — 전체 너비 배경 */}
+      <section style={{ background: "linear-gradient(135deg, #dbeafe 0%, #e0e7ff 50%, #ede9fe 100%)" }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex gap-3 min-h-[210px]">
+          {/* 왼쪽: 롤링 배너 슬라이더 */}
+          <HomeBannerSlider />
+
+          {/* 오른쪽: 개인화 — 내 교재 */}
+          <div className="flex-1 px-6 py-5 flex flex-col bg-white/80 backdrop-blur-sm rounded-xl border border-white shadow-sm">
+            <HomePersonalSection />
           </div>
         </div>
       </section>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-8 space-y-6">
         {/* 배너 */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {banners.map((banner) => (
@@ -207,3 +208,4 @@ export default function HomePage() {
     </div>
   );
 }
+

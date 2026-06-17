@@ -4,6 +4,10 @@ import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useMyClassBooks } from "../lib/useMyClassBooks";
 import { useAuth } from "../lib/useAuth";
+import { BOOK_DB } from "../lib/bookDb";
+import TextbookDetailModal from "./TextbookDetailModal";
+
+type ResourceType = "MP3" | "강의용PPT" | "기타" | "보충문제" | "본문파일" | "워크시트" | "정답&해설" | "온라인 수업자료";
 
 type Book = {
   id: string;
@@ -131,8 +135,109 @@ const BOOKS: Book[] = [
   },
 ];
 
+const BOOK_RESOURCES: Record<string, ResourceType[]> = {
+  "1":  ["MP3", "본문파일", "워크시트", "정답&해설"],
+  "2":  ["강의용PPT", "보충문제", "워크시트", "정답&해설"],
+  "3":  ["MP3", "강의용PPT", "온라인 수업자료", "정답&해설"],
+  "4":  ["강의용PPT", "보충문제", "워크시트", "정답&해설"],
+  "5":  ["MP3", "보충문제", "정답&해설", "온라인 수업자료"],
+  "6":  ["MP3", "본문파일", "워크시트", "정답&해설"],
+  "7":  ["MP3", "강의용PPT", "온라인 수업자료", "기타"],
+  "8":  ["보충문제", "워크시트", "정답&해설"],
+  "9":  ["MP3", "보충문제", "본문파일", "워크시트", "정답&해설"],
+  "10": ["본문파일", "강의용PPT", "워크시트", "정답&해설"],
+  "11": ["본문파일", "강의용PPT", "정답&해설"],
+  "12": ["MP3", "본문파일", "정답&해설", "온라인 수업자료"],
+  "13": ["MP3", "본문파일", "워크시트", "정답&해설"],
+  "14": ["본문파일", "강의용PPT", "워크시트", "정답&해설"],
+  "15": ["보충문제", "본문파일", "정답&해설", "온라인 수업자료"],
+  "16": ["MP3", "정답&해설", "온라인 수업자료"],
+};
+
 const LEVEL_TABS = ["전체", "초등", "중등", "고등"] as const;
 type LevelTab = (typeof LEVEL_TABS)[number];
+
+function ResourceBadge({ type }: { type: ResourceType }) {
+  const getIcon = () => {
+    switch (type) {
+      case "MP3":
+        return (
+          <svg viewBox="0 0 18 18" className="w-[18px] h-[18px] shrink-0">
+            <path d="M3 9a6 6 0 0 0 12 0" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" fill="none"/>
+            <rect x="1.5" y="9" width="3" height="4.5" rx="1" fill="#ef4444"/>
+            <rect x="13.5" y="9" width="3" height="4.5" rx="1" fill="#ef4444"/>
+          </svg>
+        );
+      case "강의용PPT":
+        return (
+          <svg viewBox="0 0 18 18" className="w-[18px] h-[18px] shrink-0">
+            <rect x="1" y="2.5" width="16" height="10" rx="1.5" fill="#64748b"/>
+            <rect x="2.5" y="4" width="13" height="7" rx="0.5" fill="white"/>
+            <rect x="5" y="5.5" width="8" height="1" rx="0.5" fill="#3b82f6"/>
+            <rect x="5" y="7.5" width="5" height="1" rx="0.5" fill="#94a3b8"/>
+            <path d="M0.5 14h17" stroke="#94a3b8" strokeWidth="1.2" strokeLinecap="round" fill="none"/>
+            <path d="M6.5 14l1 2M11.5 14l-1 2" stroke="#94a3b8" strokeWidth="1.2" strokeLinecap="round" fill="none"/>
+          </svg>
+        );
+      case "기타":
+        return (
+          <svg viewBox="0 0 18 18" className="w-[18px] h-[18px] shrink-0">
+            <circle cx="9" cy="9" r="7.5" fill="#e2e8f0" stroke="#94a3b8" strokeWidth="1.2"/>
+            <path d="M9 9 L9 1.5 A7.5 7.5 0 0 1 16.5 9 Z" fill="#94a3b8"/>
+          </svg>
+        );
+      case "보충문제":
+        return (
+          <svg viewBox="0 0 18 18" className="w-[18px] h-[18px] shrink-0">
+            <rect x="2" y="1" width="12" height="16" rx="1.2" fill="#fb923c"/>
+            <path d="M5 6h7M5 9h7M5 12h5" stroke="white" strokeWidth="1.2" strokeLinecap="round" fill="none"/>
+            <circle cx="14" cy="14" r="3.5" fill="#ef4444"/>
+            <path d="M12.5 14h3M14 12.5v3" stroke="white" strokeWidth="1.2" strokeLinecap="round" fill="none"/>
+          </svg>
+        );
+      case "본문파일":
+        return (
+          <svg viewBox="0 0 18 18" className="w-[18px] h-[18px] shrink-0">
+            <path d="M1.5 4H9v12L1.5 14V4z" fill="#dbeafe" stroke="#3b82f6" strokeWidth="1.1"/>
+            <path d="M9 4h7.5v10L9 16V4z" fill="#bfdbfe" stroke="#3b82f6" strokeWidth="1.1"/>
+            <path d="M3.5 7h3.5M3.5 9.5h2.5" stroke="#3b82f6" strokeWidth="0.9" strokeLinecap="round" fill="none"/>
+            <path d="M11 7h3.5M11 9.5h2.5" stroke="#3b82f6" strokeWidth="0.9" strokeLinecap="round" fill="none"/>
+          </svg>
+        );
+      case "워크시트":
+        return (
+          <svg viewBox="0 0 18 18" className="w-[18px] h-[18px] shrink-0">
+            <rect x="1.5" y="11" width="3.5" height="5.5" rx="0.5" fill="#ef4444"/>
+            <rect x="7" y="7" width="3.5" height="9.5" rx="0.5" fill="#3b82f6"/>
+            <rect x="12.5" y="3" width="3.5" height="13.5" rx="0.5" fill="#ef4444"/>
+            <path d="M1 17.5h16" stroke="#64748b" strokeWidth="1" strokeLinecap="round" fill="none"/>
+          </svg>
+        );
+      case "정답&해설":
+        return (
+          <svg viewBox="0 0 18 18" className="w-[18px] h-[18px] shrink-0">
+            <circle cx="9" cy="9" r="8" stroke="#ef4444" strokeWidth="1.4" fill="none"/>
+            <circle cx="9" cy="9" r="5" stroke="#ef4444" strokeWidth="1.4" fill="none"/>
+            <circle cx="9" cy="9" r="2" fill="#ef4444"/>
+          </svg>
+        );
+      case "온라인 수업자료":
+        return (
+          <svg viewBox="0 0 18 18" className="w-[18px] h-[18px] shrink-0">
+            <circle cx="9" cy="9" r="7.5" fill="#eff6ff" stroke="#3b82f6" strokeWidth="1.3"/>
+            <ellipse cx="9" cy="9" rx="3.8" ry="7.5" stroke="#3b82f6" strokeWidth="1" fill="none"/>
+            <path d="M1.5 9h15M3 5.5h12M3 12.5h12" stroke="#3b82f6" strokeWidth="0.9" strokeLinecap="round" fill="none"/>
+          </svg>
+        );
+    }
+  };
+  return (
+    <span className="flex items-center gap-1 text-[11px] text-slate-600 font-medium whitespace-nowrap">
+      {getIcon()}
+      {type}
+    </span>
+  );
+}
 
 export default function TextbooksClient() {
   const searchParams = useSearchParams();
@@ -143,6 +248,7 @@ export default function TextbooksClient() {
   const [showGuide, setShowGuide] = useState(false);
   const [sortByDate, setSortByDate] = useState(false);
   const [loginToast, setLoginToast] = useState(false);
+  const [detailBookId, setDetailBookId] = useState<string | null>(null);
 
   const query   = searchParams.get("q") ?? "";
   const urlLevels = (searchParams.get("levels") ?? "").split(",").filter(Boolean);
@@ -370,13 +476,24 @@ export default function TextbooksClient() {
               </div>
             </Link>
 
+            {/* 제공 자료 */}
+            {(BOOK_RESOURCES[book.id] ?? []).length > 0 && (
+              <div className="px-4 pb-3 pt-2 border-t border-slate-100">
+                <div className="flex flex-wrap gap-x-3 gap-y-1.5">
+                  {(BOOK_RESOURCES[book.id] ?? []).map((r) => (
+                    <ResourceBadge key={r} type={r} />
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* 액션 버튼 */}
-            <div className="flex gap-1.5 px-4 pb-4">
+            <div className="flex items-center gap-1.5 px-4 pb-4">
               {/* 마이클래스 담기 + 툴팁 */}
-              <div className="relative flex-1 group/tip">
+              <div className="relative group/tip">
                 <button
                   onClick={() => togglePin(book.id)}
-                  className={`w-full text-center text-xs py-2 rounded-lg font-semibold transition-all leading-tight ${
+                  className={`text-xs px-3 py-1.5 rounded-lg font-semibold transition-all leading-tight ${
                     isLoggedIn && pinned.includes(book.id)
                       ? "bg-blue-100 text-blue-700 border border-blue-300"
                       : "bg-[#1B3A6B] hover:bg-[#163060] text-white"
@@ -390,14 +507,16 @@ export default function TextbooksClient() {
                   <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800" />
                 </div>
               </div>
-              {/* 자료다운로드 */}
+              {/* 교재 자세히 보기 */}
               <button
-                className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-semibold border border-slate-200 text-slate-600 hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50 transition-all bg-white whitespace-nowrap"
+                onClick={() => setDetailBookId(book.id)}
+                className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg font-semibold border border-slate-200 text-slate-600 hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50 transition-all bg-white"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                 </svg>
-                자료다운로드
+                자세히 보기
               </button>
             </div>
           </div>
@@ -409,6 +528,16 @@ export default function TextbooksClient() {
           <p className="text-4xl mb-3">🔍</p>
           <p className="font-medium">검색 결과가 없습니다</p>
         </div>
+      )}
+
+      {/* 교재 상세 모달 */}
+      {detailBookId && BOOK_DB[detailBookId] && (
+        <TextbookDetailModal
+          book={BOOK_DB[detailBookId]}
+          onClose={() => setDetailBookId(null)}
+          onMyClassToggle={() => togglePin(detailBookId)}
+          isPinned={isLoggedIn && pinned.includes(detailBookId)}
+        />
       )}
     </div>
   );
