@@ -342,6 +342,9 @@ export default function MyClassClient() {
   const [scrapToast, setScrapToast] = useState(false);
   const showScrapToast = () => { setScrapToast(true); setTimeout(() => setScrapToast(false), 2500); };
 
+  // 자료 미리보기
+  const [previewFile, setPreviewFile] = useState<{ name: string; type: string } | null>(null);
+
   // 온라인 콘텐츠 팝업
   const [onlinePopup, setOnlinePopup] = useState(false);
   const [onlineContentModal, setOnlineContentModal] = useState(false);
@@ -360,7 +363,7 @@ export default function MyClassClient() {
   const [viewPopup, setViewPopup] = useState<{ index: number; title: string } | null>(null);
 
   // 목차 / 자료 다운로드 탭
-  const [tocTab, setTocTab] = useState<"download" | "lesson">("download");
+  const [tocTab, setTocTab] = useState<"download" | "lesson" | "class">("download");
 
   // 목차 펼침 상태 (첫 번째 레슨 기본 오픈)
   const [expandedLessons, setExpandedLessons] = useState<Set<number>>(new Set([0]));
@@ -745,7 +748,7 @@ export default function MyClassClient() {
                                           <span className="text-slate-400 mr-1">{dlCode}_</span>{f.name}
                                         </span>
                                         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                                          <button className="text-slate-400 hover:text-slate-600">
+                                          <button className="text-slate-400 hover:text-slate-600" onClick={() => setPreviewFile({ name: `${dlCode}_${f.name}`, type: f.type })}>
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                             </svg>
@@ -780,77 +783,34 @@ export default function MyClassClient() {
                 </button>
               </div>
 
-            </div>
-          </div>
-        </div>
+              {/* 서비스 버튼 */}
+              <div className="flex flex-wrap gap-2">
+                {(() => {
+                  const cls = `flex items-center gap-2 px-3 py-2 rounded-xl border-2 bg-white transition-all hover:shadow-sm hover:-translate-y-0.5 duration-150`;
+                  const inner = (tool: typeof TOOLS[number]) => (
+                    <>
+                      <span className={`shrink-0 ${tool.color} [&_svg]:w-4 [&_svg]:h-4`}>{tool.icon}</span>
+                      <span className={`text-xs font-bold leading-tight ${tool.color}`}>{tool.label}</span>
+                    </>
+                  );
+                  return TOOLS.map((tool) => {
+                    if (tool.href === "__connecting__")
+                      return <Link key={tool.label} href={`/edutech/connecting-book/viewer?bookId=${selectedId}`} className={`${cls} ${tool.border}`}>{inner(tool)}</Link>;
+                    if (tool.href === "/edutech/vocab-wizard")
+                      return <Link key={tool.label} href={`/edutech/vocab-wizard?bookId=${selectedId}`} className={`${cls} ${tool.border}`}>{inner(tool)}</Link>;
+                    if (tool.href === "__online__")
+                      return <button key={tool.label} onClick={() => setOnlinePopup(true)} className={`${cls} ${tool.border}`}>{inner(tool)}</button>;
+                    if (tool.href === "__class-game__")
+                      return <Link key={tool.label} href={`/edutech/class-game?bookId=${selectedId}`} className={`${cls} ${tool.border}`}>{inner(tool)}</Link>;
+                    if (tool.href === "__ai-material__")
+                      return <Link key={tool.label} href={`/edutech/ai-material?bookId=${selectedId}&bookTitle=${encodeURIComponent(book.title)}`} className={`${cls} ${tool.border}`}>{inner(tool)}</Link>;
+                    return tool.href.startsWith("http")
+                      ? <a key={tool.label} href={tool.href} target="_blank" rel="noopener noreferrer" className={`${cls} ${tool.border}`}>{inner(tool)}</a>
+                      : <Link key={tool.label} href={tool.href} className={`${cls} ${tool.border}`}>{inner(tool)}</Link>;
+                  });
+                })()}
+              </div>
 
-        {/* ── 서비스 버튼 ── */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm px-5 py-4 mb-5">
-          <div className="grid grid-cols-5 gap-2.5">
-            {TOOLS.map((tool) => {
-              const cls = `flex items-center gap-2.5 px-4 py-3 rounded-xl border-2 ${tool.border} bg-white transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 duration-150`;
-              const inner = (
-                <>
-                  <span className={`shrink-0 ${tool.color}`}>{tool.icon}</span>
-                  <span className={`text-xs font-bold leading-tight ${tool.color}`}>{tool.label}</span>
-                </>
-              );
-              if (tool.href === "__connecting__") {
-                return <Link key={tool.label} href={`/edutech/connecting-book/viewer?bookId=${selectedId}`} className={cls}>{inner}</Link>;
-              }
-              if (tool.href === "/edutech/vocab-wizard") {
-                return <Link key={tool.label} href={`/edutech/vocab-wizard?bookId=${selectedId}`} className={cls}>{inner}</Link>;
-              }
-              if (tool.href === "__online__") {
-                return <button key={tool.label} onClick={() => setOnlinePopup(true)} className={cls}>{inner}</button>;
-              }
-              if (tool.href === "__class-game__") {
-                return <Link key={tool.label} href={`/edutech/class-game?bookId=${selectedId}`} className={cls}>{inner}</Link>;
-              }
-              if (tool.href === "__ai-material__") {
-                return <Link key={tool.label} href={`/edutech/ai-material?bookId=${selectedId}&bookTitle=${encodeURIComponent(book.title)}`} className={cls}>{inner}</Link>;
-              }
-              return tool.href.startsWith("http") ? (
-                <a key={tool.label} href={tool.href} target="_blank" rel="noopener noreferrer" className={cls}>{inner}</a>
-              ) : (
-                <Link key={tool.label} href={tool.href} className={cls}>{inner}</Link>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* ── 학급학생관리 (가로 한 줄) ── */}
-        <div className="rounded-2xl border border-[#1B3A6B]/20 overflow-hidden shadow-sm mb-5">
-          <div className="flex items-center gap-5 px-6 py-3.5 bg-[#1B3A6B]">
-            {/* 타이틀 */}
-            <div className="flex items-center gap-2.5 shrink-0">
-              <svg className="w-5 h-5 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              <span className="text-white font-bold text-base">학급학생관리</span>
-            </div>
-            <div className="w-px h-5 bg-white/20" />
-            {/* 버튼 두 개 */}
-            <div className="flex gap-2.5">
-              <button
-                onClick={() => setClassManagePopup(true)}
-                className="flex items-center gap-1.5 px-5 py-2 bg-white/10 hover:bg-white text-white hover:text-[#1B3A6B] text-sm font-semibold rounded-lg transition-all border border-white/20 hover:border-white"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                학급 관리
-              </button>
-              <button
-                onClick={() => setMessagePopup(true)}
-                className="flex items-center gap-1.5 px-5 py-2 bg-white/10 hover:bg-white text-white hover:text-[#1B3A6B] text-sm font-semibold rounded-lg transition-all border border-white/20 hover:border-white"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                </svg>
-                메시지 보내기
-              </button>
             </div>
           </div>
         </div>
@@ -863,7 +823,7 @@ export default function MyClassClient() {
             <button
               onClick={() => setTocTab("download")}
               className={`flex-1 py-4 text-sm font-bold transition-colors border-r border-slate-200 flex items-center justify-center gap-2 ${
-                tocTab === "download" ? "bg-[#1B3A6B] text-white" : "bg-white text-slate-500 hover:bg-slate-50"
+                tocTab === "download" ? "bg-teal-500 text-white" : "bg-white text-slate-500 hover:bg-slate-50"
               }`}
             >
               {tocTab === "download" && (
@@ -875,11 +835,19 @@ export default function MyClassClient() {
             </button>
             <button
               onClick={() => setTocTab("lesson")}
-              className={`flex-1 py-4 text-sm font-bold transition-colors ${
+              className={`flex-1 py-4 text-sm font-bold transition-colors border-r border-slate-200 ${
                 tocTab === "lesson" ? "bg-[#1B3A6B] text-white" : "bg-white text-slate-500 hover:bg-slate-50"
               }`}
             >
               단원별 수업하기
+            </button>
+            <button
+              onClick={() => setTocTab("class")}
+              className={`flex-1 py-4 text-sm font-bold transition-colors ${
+                tocTab === "class" ? "bg-[#1B3A6B] text-white" : "bg-white text-slate-500 hover:bg-slate-50"
+              }`}
+            >
+              학급·학생관리
             </button>
           </div>
 
@@ -940,12 +908,12 @@ export default function MyClassClient() {
           {tocTab === "download" && (
             <div className="bg-white">
               {/* 분류 필터 */}
-              <div className="flex items-center gap-4 px-6 py-3.5 border-b border-slate-100">
-                <span className="text-sm font-bold text-slate-700 w-16 shrink-0">분류</span>
-                <div className="flex gap-2">
+              <div className="flex items-center gap-2 px-6 py-2 border-b border-slate-100">
+                <span className="text-xs font-bold text-slate-700 w-10 shrink-0">분류</span>
+                <div className="flex gap-1">
                   {(["전체","평가용","수업용"] as const).map(c => (
                     <button key={c} onClick={() => setCategoryFilter(c)}
-                      className={`px-4 py-1.5 rounded-full text-sm font-semibold border transition-all ${
+                      className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border transition-all ${
                         categoryFilter === c ? "bg-[#1B3A6B]/10 border-[#1B3A6B] text-[#1B3A6B]" : "border-slate-200 text-slate-500 hover:border-slate-300"
                       }`}>{c}</button>
                   ))}
@@ -953,9 +921,9 @@ export default function MyClassClient() {
               </div>
 
               {/* 파일 유형 필터 */}
-              <div className="flex items-center gap-4 px-6 py-3.5 border-b border-slate-100">
-                <span className="text-sm font-bold text-slate-700 w-16 shrink-0">파일 유형</span>
-                <div className="flex gap-2 flex-wrap">
+              <div className="flex items-center gap-2 px-6 py-2 border-b border-slate-100">
+                <span className="text-xs font-bold text-slate-700 whitespace-nowrap shrink-0">파일 유형</span>
+                <div className="flex gap-1.5 flex-nowrap">
                   {[
                     { label: "전체", value: "전체" },
                     { label: "HWP",  value: "HWP"  },
@@ -964,7 +932,7 @@ export default function MyClassClient() {
                     { label: "기타",  value: "ZIP"  },
                   ].map(({ label, value }) => (
                     <button key={value} onClick={() => setTypeFilter(value)}
-                      className={`px-4 py-1.5 rounded-full text-sm font-semibold border transition-all ${
+                      className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border transition-all ${
                         typeFilter === value ? "bg-[#1B3A6B]/10 border-[#1B3A6B] text-[#1B3A6B]" : "border-slate-200 text-slate-500 hover:border-slate-300"
                       }`}>{label}</button>
                   ))}
@@ -1053,7 +1021,7 @@ export default function MyClassClient() {
                                   <span className="text-slate-400">{dlCode}_</span>{f.name}
                                 </span>
                                 <div className="flex items-center gap-2 text-slate-300 group-hover:text-slate-400 shrink-0">
-                                  <button className="hover:text-slate-600 transition-colors">
+                                  <button className="hover:text-slate-600 transition-colors" onClick={() => setPreviewFile({ name: `${dlCode}_${f.name}`, type: f.type })}>
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                     </svg>
@@ -1146,7 +1114,7 @@ export default function MyClassClient() {
                                           <span className="text-slate-400">{dlCode}_</span>{f.name}
                                         </span>
                                         <div className="flex items-center gap-2 text-slate-300 group-hover:text-slate-400 shrink-0">
-                                          <button className="hover:text-slate-600 transition-colors">
+                                          <button className="hover:text-slate-600 transition-colors" onClick={() => setPreviewFile({ name: `${dlCode}_${f.name}`, type: f.type })}>
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                             </svg>
@@ -1183,6 +1151,117 @@ export default function MyClassClient() {
               })}
             </div>
           )}
+
+          {/* ─ 학급·학생관리 ─ */}
+          {tocTab === "class" && (() => {
+            const classes = [
+              { id: "c1", org: "와이비엠어학원 > 4학년", name: "그래머반", total: 0, groups: 2, from: "2026.06.18", to: "2027.02.01", lessons: 0 },
+              { id: "c2", org: "YBM스마트영어교습소 > 1, 5학년", name: "리딩반", total: 0, groups: 2, from: "2026.06.18", to: "2027.01.29", lessons: 0 },
+            ];
+            return (
+              <div className="bg-white px-7 py-6">
+                {/* 헤더 */}
+                <div className="flex items-center justify-between mb-5">
+                  <h3 className="text-lg font-black text-slate-800">학급 현황</h3>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setMessagePopup(true)}
+                      className="flex items-center gap-1.5 px-4 py-2 border border-slate-300 rounded-lg text-sm text-slate-600 font-semibold hover:bg-slate-50 transition-colors"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                      </svg>
+                      메시지 보내기
+                    </button>
+                    <button
+                      onClick={() => setClassManagePopup(true)}
+                      className="flex items-center gap-1.5 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-bold rounded-lg transition-colors"
+                    >
+                      신규 학급 등록
+                    </button>
+                  </div>
+                </div>
+
+                {/* 필터 */}
+                <div className="flex items-center gap-2 mb-5">
+                  <select className="px-3 py-1.5 border border-slate-300 rounded-lg text-sm text-slate-700 bg-white focus:outline-none focus:border-blue-400">
+                    <option>전체</option>
+                    <option>운영중</option>
+                    <option>종료</option>
+                  </select>
+                  <button className="w-8 h-8 flex items-center justify-center border border-slate-300 rounded-lg bg-white hover:bg-slate-50 transition-colors">
+                    <svg className="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* 학급 카드 그리드 */}
+                <div className="grid grid-cols-2 gap-4">
+                  {classes.map((cls) => (
+                    <button
+                      key={cls.id}
+                      onClick={() => setClassManagePopup(true)}
+                      className="text-left border border-slate-200 rounded-2xl p-5 bg-slate-50 hover:border-blue-300 hover:bg-blue-50/30 transition-all relative"
+                    >
+                      {/* 상단: 기관 + 인원 */}
+                      <div className="flex items-start justify-between gap-3 mb-1">
+                        <div>
+                          <p className="text-xs text-slate-500 mb-0.5">{cls.org}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-base font-black text-slate-800">{cls.name}</p>
+                            <button
+                              onClick={e => e.stopPropagation()}
+                              className="text-slate-400 hover:text-red-500 transition-colors"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4 shrink-0 text-center">
+                          <div>
+                            <p className="text-[11px] text-slate-400 mb-0.5">총 인원</p>
+                            <p className="text-2xl font-black text-blue-500">{cls.total}</p>
+                          </div>
+                          <div>
+                            <p className="text-[11px] text-slate-400 mb-0.5">모둠</p>
+                            <p className="text-2xl font-black text-slate-700">{cls.groups}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 운영기간 / 수업진행 */}
+                      <div className="mt-4 space-y-1.5">
+                        <p className="text-sm text-slate-600">
+                          <span className="font-bold">운영기간</span>
+                          <span className="ml-1">{cls.from} ~ {cls.to}</span>
+                        </p>
+                        <p className="text-sm text-slate-600">
+                          <span className="font-bold">수업진행</span>
+                          <span className="ml-1">총 {cls.lessons}개 수업</span>
+                        </p>
+                      </div>
+
+                      {/* 학생 미등록 안내 */}
+                      {cls.total === 0 && (
+                        <div className="mt-6 text-center text-xs text-red-500 space-y-0.5">
+                          <div className="flex items-center justify-center gap-1">
+                            <svg className="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                            <span className="font-semibold">학생이 등록되지 않았습니다.</span>
+                          </div>
+                          <p>학급을 클릭하여 초대 URL을 학생들에게 공유해주세요.</p>
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
         </div>
 
         {/* ── 내가 만든 자료 + 스크랩 자료 ── */}
@@ -1272,6 +1351,37 @@ export default function MyClassClient() {
     </div>
     </div>
 
+
+    {/* ── 자료 미리보기 모달 ── */}
+    {previewFile && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setPreviewFile(null)}>
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+          <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100">
+            <div className="flex items-center gap-2.5">
+              {(() => {
+                const ts = FILE_TYPE_STYLE[previewFile.type] ?? { bg: "bg-slate-400", label: previewFile.type };
+                return <span className={`text-[11px] font-bold text-white px-2 py-0.5 rounded ${ts.bg}`}>{ts.label}</span>;
+              })()}
+              <span className="font-bold text-slate-800 text-sm truncate">{previewFile.name} 미리보기</span>
+            </div>
+            <button onClick={() => setPreviewFile(null)} className="text-slate-400 hover:text-slate-600 transition-colors shrink-0">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div className="flex-1 overflow-auto bg-slate-50 flex flex-col items-center justify-center gap-4 py-16">
+            <div className="w-16 h-16 rounded-2xl bg-slate-200 flex items-center justify-center">
+              <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <p className="text-sm font-semibold text-slate-500">미리보기 준비 중입니다.</p>
+            <p className="text-xs text-slate-400">교사 인증 후 전체 파일을 다운로드할 수 있습니다.</p>
+          </div>
+        </div>
+      </div>
+    )}
 
     {/* ── 자료 다운로드 팝업 ── */}
     {downloadPopup && (

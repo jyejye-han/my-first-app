@@ -1,3 +1,4 @@
+import React from "react";
 import Link from "next/link";
 import HomePersonalSection from "./components/HomePersonalSection";
 import HomeBannerSlider from "./components/HomeBannerSlider";
@@ -70,6 +71,71 @@ export default function HomePage() {
       </section>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-8 space-y-6">
+        {/* 에듀테크 바로가기 */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm px-5 py-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-1.5">
+              <span className="w-1 h-4 bg-blue-600 rounded-full inline-block" />
+              <span className="text-sm font-bold text-slate-800">에듀테크 바로가기</span>
+            </div>
+            <Link href="/edutech" className="text-[11px] text-blue-500 hover:text-blue-700 font-medium flex items-center gap-0.5">
+              전체보기
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+          </div>
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+            {([
+              { id: "class-game",    label: "클래스게임",    icon: <span className="text-3xl">🏆</span>, href: "/edutech/class-game",  isExt: false },
+              { id: "vocab-wizard",  label: "어휘출제마법사", icon: <span className="text-3xl">🪄</span>, href: "/edutech/vocab-wizard", isExt: false },
+              { id: "quick-quiz",    label: "깜짝퀴즈",      icon: (
+                <span className="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-blue-600 text-white font-black text-xl shadow-sm">Q</span>
+              ), href: "https://school.ybmsmartschool.com/quiz/quiz_list?grd_cd=301002&sso_tag=4e89ae318b9ea3a9b6ab376912995b03", isExt: true },
+              { id: "ai-eval",       label: "AI평가",        icon: <span className="text-3xl">🤖</span>, href: "/edutech/ai-eval",      isExt: false },
+              { id: "connecting-book", label: "커넥팅북",    icon: (
+                <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="4" y="2" width="28" height="32" rx="4" fill="#e0f2fe" stroke="#0ea5e9" strokeWidth="2"/>
+                  <line x1="4" y1="27" x2="32" y2="27" stroke="#0ea5e9" strokeWidth="1.5"/>
+                  <circle cx="18" cy="30.5" r="1.5" fill="#0ea5e9"/>
+                  <rect x="9" y="7" width="18" height="2" rx="1" fill="#0ea5e9" opacity="0.5"/>
+                  <rect x="9" y="11" width="14" height="2" rx="1" fill="#0ea5e9" opacity="0.4"/>
+                  <rect x="9" y="15" width="16" height="2" rx="1" fill="#0ea5e9" opacity="0.4"/>
+                </svg>
+              ), href: "https://www.ybmcloud.com/connecting/content?siteType=E", isExt: true },
+              { id: "ai-material",   label: "AI 자료생성",   icon: <span className="text-3xl">✨</span>, href: "/edutech/ai-material",  isExt: false, isNew: true },
+            ] as { id: string; label: string; icon: React.ReactNode; href: string; isExt: boolean; isNew?: boolean }[]).map((s) =>
+              s.isExt ? (
+                <a
+                  key={s.id}
+                  href={s.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="relative flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl border border-slate-100 bg-slate-50 hover:bg-blue-50 hover:border-blue-200 transition-colors group"
+                >
+                  {s.isNew && (
+                    <span className="absolute top-1.5 right-1.5 text-[8px] bg-red-500 text-white px-1.5 py-0.5 rounded-full font-bold leading-none">N</span>
+                  )}
+                  {s.icon}
+                  <span className="text-[13px] font-semibold text-slate-700 group-hover:text-blue-700 text-center leading-tight">{s.label}</span>
+                </a>
+              ) : (
+                <Link
+                  key={s.id}
+                  href={s.href}
+                  className="relative flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl border border-slate-100 bg-slate-50 hover:bg-blue-50 hover:border-blue-200 transition-colors group"
+                >
+                  {s.isNew && (
+                    <span className="absolute top-1.5 right-1.5 text-[8px] bg-red-500 text-white px-1.5 py-0.5 rounded-full font-bold leading-none">N</span>
+                  )}
+                  {s.icon}
+                  <span className="text-[13px] font-semibold text-slate-700 group-hover:text-blue-700 text-center leading-tight">{s.label}</span>
+                </Link>
+              )
+            )}
+          </div>
+        </div>
+
         {/* 배너 */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {banners.map((banner) => (
@@ -110,21 +176,26 @@ export default function HomePage() {
             </Link>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-x divide-y divide-slate-100">
-            {recommendedBooks.map((book) => (
+            {recommendedBooks.map((book, idx) => (
               <Link
                 key={book.id}
                 href={`/textbooks/${book.id}`}
                 className="p-4 hover:bg-blue-50 transition-colors group flex flex-col items-center text-center"
               >
-                {book.image ? (
-                  <img
-                    src={book.image}
-                    alt={book.title}
-                    className="w-[84px] h-[115px] object-cover rounded-lg shadow-sm border border-slate-100 mb-2.5"
-                  />
-                ) : (
-                  <div className="text-4xl mb-2">{book.emoji}</div>
-                )}
+                <div className="relative mb-2.5">
+                  {idx < 2 && (
+                    <span className="absolute -top-2 -left-2 z-10 bg-red-500 text-white border-2 border-yellow-300 text-[11px] font-black px-2 py-0.5 rounded-full leading-none tracking-wide">NEW</span>
+                  )}
+                  {book.image ? (
+                    <img
+                      src={book.image}
+                      alt={book.title}
+                      className="w-[84px] h-[115px] object-cover rounded-lg shadow-sm border border-slate-100"
+                    />
+                  ) : (
+                    <div className="text-4xl">{book.emoji}</div>
+                  )}
+                </div>
                 <p className="text-xs font-semibold text-slate-800 group-hover:text-blue-700 line-clamp-2 leading-snug w-full">
                   {book.title}
                 </p>
