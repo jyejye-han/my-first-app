@@ -179,7 +179,7 @@ export default function HomePage() {
             {recommendedBooks.map((book, idx) => (
               <Link
                 key={book.id}
-                href={`/textbooks/${book.id}`}
+                href={`/textbooks?open=${book.id}`}
                 className="p-4 hover:bg-blue-50 transition-colors group flex flex-col items-center text-center"
               >
                 <div className="relative mb-2.5">

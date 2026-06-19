@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useMyClassBooks } from "../lib/useMyClassBooks";
@@ -279,6 +279,16 @@ export default function TextbooksClient() {
 
   const query   = searchParams.get("q") ?? "";
   const urlLevels = (searchParams.get("levels") ?? "").split(",").filter(Boolean);
+  const openParam = searchParams.get("open");
+
+  useEffect(() => {
+    if (!openParam) return;
+    setDetailBookId(openParam);
+    setInlineTab("intro");
+    setTimeout(() => {
+      document.getElementById(`book-${openParam}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 100);
+  }, []);
 
   const handleResourceClick = (bookId: string) => {
     if (!isLoggedIn) {
@@ -475,7 +485,7 @@ export default function TextbooksClient() {
       {/* ── 교재 리스트 ── */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         {displayBooks.map((book) => (
-          <div key={book.id} className="border-b border-slate-100 last:border-b-0">
+          <div key={book.id} id={`book-${book.id}`} className="border-b border-slate-100 last:border-b-0">
           <div
             className="flex gap-7 px-7 py-7 hover:bg-slate-50 transition-colors group"
           >
