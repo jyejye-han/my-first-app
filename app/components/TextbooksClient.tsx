@@ -5,9 +5,8 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useMyClassBooks } from "../lib/useMyClassBooks";
 import { useAuth } from "../lib/useAuth";
 import { BOOK_DB } from "../lib/bookDb";
-import TextbookDetailModal from "./TextbookDetailModal";
 
-type ResourceType = "MP3" | "강의용PPT" | "기타" | "보충문제" | "본문파일" | "워크시트" | "정답&해설" | "온라인 수업자료";
+type ResourceType = "MP3" | "강의용PPT" | "기타" | "보충문제" | "본문파일" | "워크시트" | "정답&해설" | "온라인 수업자료" | "어휘리스트";
 
 type Book = {
   id: string;
@@ -21,6 +20,21 @@ type Book = {
   description: string;
   isNew?: boolean;
 };
+
+function renderDescription(text: string) {
+  return text.split("\n").map((line, i) => {
+    if (/^\[.+\]$/.test(line.trim()))
+      return <p key={i} className="font-bold text-slate-800 mt-4 mb-1 text-sm">{line.trim()}</p>;
+    if (line.startsWith("- "))
+      return <p key={i} className="text-sm text-slate-600 leading-relaxed pl-3">• {line.slice(2)}</p>;
+    if (line.startsWith("* "))
+      return <p key={i} className="text-sm font-semibold text-slate-700 mt-2">{line.slice(2)}</p>;
+    if (line.startsWith(": "))
+      return <p key={i} className="text-sm text-slate-500 leading-relaxed pl-3 mb-1">{line.slice(2)}</p>;
+    if (line.trim() === "") return <div key={i} className="h-1" />;
+    return <p key={i} className="text-sm text-slate-700 leading-relaxed">{line}</p>;
+  });
+}
 
 const BOOKS: Book[] = [
   {
@@ -136,28 +150,28 @@ const BOOKS: Book[] = [
 ];
 
 const BOOK_RESOURCES: Record<string, ResourceType[]> = {
-  "1":  ["MP3", "본문파일", "워크시트", "정답&해설"],
-  "2":  ["강의용PPT", "보충문제", "워크시트", "정답&해설"],
-  "3":  ["MP3", "강의용PPT", "온라인 수업자료", "정답&해설"],
-  "4":  ["강의용PPT", "보충문제", "워크시트", "정답&해설"],
-  "5":  ["MP3", "보충문제", "정답&해설", "온라인 수업자료"],
-  "6":  ["MP3", "본문파일", "워크시트", "정답&해설"],
+  "1":  ["MP3", "어휘리스트", "본문파일", "워크시트", "정답&해설"],
+  "2":  ["어휘리스트", "강의용PPT", "보충문제", "워크시트", "정답&해설"],
+  "3":  ["MP3", "어휘리스트", "강의용PPT", "온라인 수업자료", "정답&해설"],
+  "4":  ["어휘리스트", "강의용PPT", "보충문제", "워크시트", "정답&해설"],
+  "5":  ["MP3", "어휘리스트", "보충문제", "정답&해설", "온라인 수업자료"],
+  "6":  ["MP3", "어휘리스트", "본문파일", "워크시트", "정답&해설"],
   "7":  ["MP3", "강의용PPT", "온라인 수업자료", "기타"],
-  "8":  ["보충문제", "워크시트", "정답&해설"],
-  "9":  ["MP3", "보충문제", "본문파일", "워크시트", "정답&해설"],
-  "10": ["본문파일", "강의용PPT", "워크시트", "정답&해설"],
-  "11": ["본문파일", "강의용PPT", "정답&해설"],
-  "12": ["MP3", "본문파일", "정답&해설", "온라인 수업자료"],
-  "13": ["MP3", "본문파일", "워크시트", "정답&해설"],
-  "14": ["본문파일", "강의용PPT", "워크시트", "정답&해설"],
-  "15": ["보충문제", "본문파일", "정답&해설", "온라인 수업자료"],
+  "8":  ["어휘리스트", "보충문제", "워크시트", "정답&해설"],
+  "9":  ["MP3", "어휘리스트", "보충문제", "본문파일", "워크시트", "정답&해설"],
+  "10": ["어휘리스트", "본문파일", "강의용PPT", "워크시트", "정답&해설"],
+  "11": ["어휘리스트", "본문파일", "강의용PPT", "정답&해설"],
+  "12": ["MP3", "어휘리스트", "본문파일", "정답&해설", "온라인 수업자료"],
+  "13": ["MP3", "어휘리스트", "본문파일", "워크시트", "정답&해설"],
+  "14": ["어휘리스트", "본문파일", "강의용PPT", "워크시트", "정답&해설"],
+  "15": ["어휘리스트", "보충문제", "본문파일", "정답&해설", "온라인 수업자료"],
   "16": ["MP3", "정답&해설", "온라인 수업자료"],
 };
 
 const LEVEL_TABS = ["전체", "초등", "중등", "고등"] as const;
 type LevelTab = (typeof LEVEL_TABS)[number];
 
-function ResourceBadge({ type }: { type: ResourceType }) {
+function ResourceBadge({ type, onClick }: { type: ResourceType; onClick?: () => void }) {
   const getIcon = () => {
     switch (type) {
       case "MP3":
@@ -229,13 +243,25 @@ function ResourceBadge({ type }: { type: ResourceType }) {
             <path d="M1.5 9h15M3 5.5h12M3 12.5h12" stroke="#3b82f6" strokeWidth="0.9" strokeLinecap="round" fill="none"/>
           </svg>
         );
+      case "어휘리스트":
+        return (
+          <svg viewBox="0 0 18 18" className="w-5 h-5 shrink-0">
+            <rect x="1.5" y="1.5" width="15" height="15" rx="2" fill="#f0fdf4" stroke="#22c55e" strokeWidth="1.3"/>
+            <path d="M4 5.5h10M4 9h10M4 12.5h6" stroke="#22c55e" strokeWidth="1.2" strokeLinecap="round" fill="none"/>
+            <circle cx="14" cy="12.5" r="2.5" fill="#22c55e"/>
+            <path d="M13 12.5l.8.8 1.5-1.5" stroke="white" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+          </svg>
+        );
     }
   };
   return (
-    <span className="flex items-center gap-2 text-xs text-slate-600 font-medium">
+    <button
+      onClick={onClick}
+      className="flex items-center gap-2 text-xs text-slate-600 font-medium hover:text-blue-600 transition-colors"
+    >
       {getIcon()}
       {type}
-    </span>
+    </button>
   );
 }
 
@@ -249,9 +275,20 @@ export default function TextbooksClient() {
   const [sortByDate, setSortByDate] = useState(false);
   const [loginToast, setLoginToast] = useState(false);
   const [detailBookId, setDetailBookId] = useState<string | null>(null);
+  const [inlineTab, setInlineTab] = useState<"intro" | "toc">("intro");
 
   const query   = searchParams.get("q") ?? "";
   const urlLevels = (searchParams.get("levels") ?? "").split(",").filter(Boolean);
+
+  const handleResourceClick = (bookId: string) => {
+    if (!isLoggedIn) {
+      setLoginToast(true);
+      setTimeout(() => { setLoginToast(false); router.push("/login?next=/my-class"); }, 1500);
+      return;
+    }
+    if (!hasBook(bookId)) addBook(bookId);
+    router.push(`/my-class?book=${bookId}`);
+  };
 
   const togglePin = (id: string) => {
     if (!isLoggedIn) {
@@ -283,6 +320,10 @@ export default function TextbooksClient() {
       }
       return (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0);
     });
+
+  const topNewBooks = filtered.filter(b => b.isNew).slice(0, 3);
+  const topNewIds = new Set(topNewBooks.map(b => b.id));
+  const displayBooks = [...topNewBooks, ...filtered.filter(b => !topNewIds.has(b.id))];
 
   const pinnedBooks = isLoggedIn ? BOOKS.filter((b) => pinned.includes(b.id)) : [];
 
@@ -432,14 +473,14 @@ export default function TextbooksClient() {
       </div>
 
       {/* ── 교재 리스트 ── */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden divide-y divide-slate-100">
-        {filtered.map((book) => (
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        {displayBooks.map((book) => (
+          <div key={book.id} className="border-b border-slate-100 last:border-b-0">
           <div
-            key={book.id}
             className="flex gap-7 px-7 py-7 hover:bg-slate-50 transition-colors group"
           >
             {/* 표지 */}
-            <Link href={`/textbooks/${book.id}`} className="shrink-0">
+            <div className="shrink-0">
               {book.image ? (
                 <img
                   src={book.image}
@@ -451,7 +492,7 @@ export default function TextbooksClient() {
                   {book.emoji}
                 </div>
               )}
-            </Link>
+            </div>
 
             {/* 정보 */}
             <div className="flex-1 min-w-0 flex flex-col justify-between py-1">
@@ -462,14 +503,9 @@ export default function TextbooksClient() {
                   <span className="text-xs border border-slate-300 text-slate-500 px-2.5 py-0.5 rounded-full">{book.levelGroup}</span>
                   <span className="text-xs border border-slate-300 text-slate-500 px-2.5 py-0.5 rounded-full">영어</span>
                   <span className="text-xs border border-slate-300 text-slate-500 px-2.5 py-0.5 rounded-full">{book.category}</span>
-                  {book.isNew && (
-                    <span className="text-xs bg-red-500 text-white border border-red-500 px-2.5 py-0.5 rounded-full font-bold">NEW</span>
-                  )}
                 </div>
                 {/* 제목 */}
-                <Link href={`/textbooks/${book.id}`}>
-                  <h3 className="text-xl font-black text-slate-900 group-hover:text-blue-700 leading-snug mb-1.5 transition-colors">{book.title}</h3>
-                </Link>
+                <h3 className="text-xl font-black text-slate-900 leading-snug mb-1.5">{book.title}</h3>
                 {/* 저자 */}
                 <p className="text-sm text-slate-500 mb-2">
                   {book.author} · YBM · {book.publishDate}
@@ -482,7 +518,7 @@ export default function TextbooksClient() {
               <div className="flex items-center justify-between mt-5">
                 <div className="flex flex-wrap gap-x-5 gap-y-2">
                   {(BOOK_RESOURCES[book.id] ?? []).map((r) => (
-                    <ResourceBadge key={r} type={r} />
+                    <ResourceBadge key={r} type={r} onClick={() => handleResourceClick(book.id)} />
                   ))}
                 </div>
                 <div className="flex items-center gap-2 shrink-0 ml-4">
@@ -509,18 +545,72 @@ export default function TextbooksClient() {
                     </div>
                   </div>
                   <button
-                    onClick={() => setDetailBookId(book.id)}
-                    className="flex items-center gap-1.5 text-sm px-4 py-2 rounded-lg font-semibold border border-slate-200 text-slate-600 hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50 transition-all bg-white whitespace-nowrap"
+                    onClick={() => {
+                      if (detailBookId === book.id) {
+                        setDetailBookId(null);
+                      } else {
+                        setDetailBookId(book.id);
+                        setInlineTab("intro");
+                      }
+                    }}
+                    className={`flex items-center gap-1.5 text-sm px-4 py-2 rounded-lg font-semibold border transition-all whitespace-nowrap ${
+                      detailBookId === book.id
+                        ? "bg-slate-800 text-white border-slate-800"
+                        : "border-slate-200 text-slate-600 hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50 bg-white"
+                    }`}
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                     </svg>
-                    자세히 보기
+                    도서정보
                   </button>
                 </div>
               </div>
             </div>
+          </div>
+          {detailBookId === book.id && (
+            <div className="border-t border-slate-200">
+              <div className="flex">
+                {(["intro", "toc"] as const).map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setInlineTab(tab)}
+                    className={`flex-1 py-2.5 text-sm font-bold transition-colors ${
+                      inlineTab === tab
+                        ? "bg-slate-800 text-white"
+                        : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                    }`}
+                  >
+                    {tab === "intro" ? "도서 소개" : "목차"}
+                  </button>
+                ))}
+              </div>
+              <div className="p-8 bg-white min-h-[480px]">
+                {inlineTab === "intro" && (
+                  <div className="space-y-0.5">
+                    {renderDescription(BOOK_DB[book.id]?.description ?? book.description)}
+                  </div>
+                )}
+                {inlineTab === "toc" && (
+                  BOOK_DB[book.id]?.toc?.length ? (
+                    <ul className="flex flex-col">
+                      {BOOK_DB[book.id].toc.map((item, idx) => (
+                        <li key={idx} className="flex items-center gap-3 py-2.5 border-b border-slate-100">
+                          <span className="w-6 h-6 bg-blue-50 text-blue-600 rounded-full text-[11px] font-bold flex items-center justify-center shrink-0">
+                            {idx + 1}
+                          </span>
+                          <span className="text-sm text-slate-700">{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-slate-400">목차 정보가 없습니다.</p>
+                  )
+                )}
+              </div>
+            </div>
+          )}
           </div>
         ))}
       </div>
@@ -532,15 +622,6 @@ export default function TextbooksClient() {
         </div>
       )}
 
-      {/* 교재 상세 모달 */}
-      {detailBookId && BOOK_DB[detailBookId] && (
-        <TextbookDetailModal
-          book={BOOK_DB[detailBookId]}
-          onClose={() => setDetailBookId(null)}
-          onMyClassToggle={() => togglePin(detailBookId)}
-          isPinned={isLoggedIn && pinned.includes(detailBookId)}
-        />
-      )}
     </div>
   );
 }
