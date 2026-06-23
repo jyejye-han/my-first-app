@@ -18,23 +18,11 @@ const NAV = [
   },
   {
     id: "my-class",
-    label: "마이클래스",
+    label: "마이북",
     href: "/my-class",
     icon: (
       <svg className="w-4 h-4 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-      </svg>
-    ),
-    menu: [],
-  },
-  {
-    id: "roadmap",
-    label: "학습로드맵",
-    href: "/roadmap",
-    icon: (
-      <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
       </svg>
     ),
     menu: [],
@@ -52,10 +40,23 @@ const NAV = [
       { label: "클래스게임",    href: "https://www.ybmcloud.com/twowaygames/content?siteType=E" },
       { label: "어휘출제마법사", href: "/edutech/vocab-wizard" },
       { label: "깜짝퀴즈",      href: "https://school.ybmsmartschool.com/quiz/quiz_list?grd_cd=301002&sso_tag=4e89ae318b9ea3a9b6ab376912995b03" },
-      { label: "AI평가",        href: "/edutech/ai-eval" },
       { label: "커넥팅북",      href: "https://www.ybmcloud.com/connecting/content?siteType=E" },
-      { label: "AI 자료 생성",  href: "/edutech/ai-material", isNew: true },
+      { label: "__divider__",   href: "" },
+      { label: "AI평가",        href: "/edutech/ai-eval",      isAI: true },
+      { label: "AI 자료 생성",  href: "/edutech/ai-material",  isAI: true, isNew: true },
     ],
+  },
+  {
+    id: "roadmap",
+    label: "학습로드맵",
+    href: "/roadmap",
+    icon: (
+      <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+      </svg>
+    ),
+    menu: [],
   },
 ];
 
@@ -304,22 +305,42 @@ export default function GNB() {
                 </Link>
                 {item.menu.length > 0 && activeMenu === item.id && (
                   <div className="absolute top-full left-0 mt-1 w-52 bg-white rounded-xl shadow-xl border border-slate-100 py-2 z-50">
-                    {item.menu.map((child: { label: string; href: string; isNew?: boolean; isPaid?: boolean }) => {
+                    {item.menu.map((child: { label: string; href: string; isNew?: boolean; isPaid?: boolean; isAI?: boolean }, idx: number) => {
+                      if (child.label === "__divider__") {
+                        return <div key={`divider-${idx}`} className="mx-3 my-1.5 border-t border-slate-100" />;
+                      }
                       const isExt = child.href.startsWith("http");
-                      const cls = "flex items-center justify-between px-4 py-2.5 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition-colors";
-                      const badges = (
-                        <div className="flex gap-1">
+                      const cls = `flex items-center justify-between px-4 py-2.5 text-sm transition-colors ${
+                        child.isAI
+                          ? "text-slate-700 hover:bg-violet-50 hover:text-violet-700"
+                          : "text-slate-700 hover:bg-blue-50 hover:text-blue-700"
+                      }`;
+                      const labelEl = (
+                        <span className="flex items-center gap-1.5">
+                          {child.label}
                           {child.isNew && <span className="text-[10px] bg-red-500 text-white px-1.5 py-0.5 rounded-full font-bold leading-none">NEW</span>}
+                        </span>
+                      );
+                      const rightBadges = (
+                        <div className="flex gap-1 items-center">
+                          {child.isAI && (
+                            <span className="inline-flex items-center gap-0.5 text-[10px] font-black px-1.5 py-0.5 rounded-full leading-none bg-gradient-to-r from-violet-500 to-cyan-400 text-white shadow-sm shadow-violet-200">
+                              <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/>
+                              </svg>
+                              AI
+                            </span>
+                          )}
                           {child.isPaid && <span className="text-[10px] bg-violet-500 text-white px-1.5 py-0.5 rounded-full font-bold leading-none">유</span>}
                         </div>
                       );
                       return isExt ? (
                         <a key={child.href} href={child.href} target="_blank" rel="noopener noreferrer" className={cls}>
-                          <span>{child.label}</span>{badges}
+                          {labelEl}{rightBadges}
                         </a>
                       ) : (
                         <Link key={child.href} href={child.href} className={cls}>
-                          <span>{child.label}</span>{badges}
+                          {labelEl}{rightBadges}
                         </Link>
                       );
                     })}

@@ -125,12 +125,6 @@ export default function FloatingQuickMenu() {
                     <p className="text-lg font-black text-slate-800 leading-tight">
                       {profile.name} <span className="font-normal text-slate-500 text-base">선생님</span>
                     </p>
-                    <span
-                      className="inline-block mt-2.5 px-5 py-1 rounded-full text-sm font-bold"
-                      style={{ background: "#f9a8b8", color: "#c0385a" }}
-                    >
-                      정회원
-                    </span>
                   </div>
                   <div className="flex items-center justify-center gap-4 mt-3">
                     <Link href="/my-class" className="text-xs text-slate-500 hover:text-blue-600 transition-colors">
