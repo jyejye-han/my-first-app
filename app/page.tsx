@@ -48,9 +48,9 @@ const faqs = [
 const recommendedBooks = [
   { id: "1",  title: "Reading Prime 1",             level: "중등", category: "독해",   emoji: "📘", image: "/images/books/reading-prime-1.jpg" },
   { id: "15", title: "Write NOW 1",                 level: "초등", category: "쓰기",   emoji: "✏️", image: "/images/books/write-now-1.jpg" },
-  { id: "3",  title: "Phonics NOW 1",               level: "초등", category: "파닉스", emoji: "📙", image: "/images/books/phonics-now-1.jpg" },
-  { id: "12", title: "Benchmark Reading Starter 1", level: "초등", category: "독해",   emoji: "📗", image: "/images/books/benchmark-reading-starter-1.jpg" },
-  { id: "10", title: "Booster 유형독해",             level: "고등", category: "독해",   emoji: "📰", image: "/images/books/booster-reading.jpg" },
+  { id: "3",  title: "Phonics NOW 1",               level: "초등", category: "파닉스", emoji: "📙", image: "/images/books/phonics-now-1.jpg",               isBest: true },
+  { id: "12", title: "Benchmark Reading Starter 1", level: "초등", category: "독해",   emoji: "📗", image: "/images/books/benchmark-reading-starter-1.jpg", isBest: true },
+  { id: "10", title: "Booster 유형독해",             level: "고등", category: "독해",   emoji: "📰", image: "/images/books/booster-reading.jpg",              isBest: true },
 ];
 
 export default function HomePage() {
@@ -184,7 +184,10 @@ export default function HomePage() {
               >
                 <div className="relative mb-2.5">
                   {idx < 2 && (
-                    <span className="absolute -top-2 -left-2 z-10 bg-red-500 text-white border-2 border-yellow-300 text-[11px] font-black px-2 py-0.5 rounded-full leading-none tracking-wide">NEW</span>
+                    <span className="absolute -top-2 -right-2 z-10 bg-red-500 text-white border-2 border-yellow-300 text-[11px] font-black px-2 py-0.5 rounded-full leading-none tracking-wide">NEW</span>
+                  )}
+                  {book.isBest && (
+                    <span className="absolute -top-2 -right-2 z-10 bg-blue-500 text-white border-2 border-blue-200 text-[11px] font-black px-2 py-0.5 rounded-full leading-none tracking-wide">BEST</span>
                   )}
                   {book.image ? (
                     <img
