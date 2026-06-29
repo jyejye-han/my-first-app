@@ -38,7 +38,7 @@ const QUIZ_TYPES = [
 
 const MAX_BOOKS = 3;
 
-// 마이클래스 bookId → VocabWizard bookId 매핑
+// 마이북 bookId → VocabWizard bookId 매핑
 const MY_CLASS_TO_VOCAB: Record<string, string> = {
   "1": "b6", "2": "b8",  "3": "b12", "4": "b9",
   "5": "b1", "6": "b7",  "10": "b2", "11": "b4",

@@ -260,7 +260,7 @@ export default function TextbookDetailClient({ book }: { book: Book }) {
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                   </svg>
-                  마이클래스 담기
+                  마이북 담기
                 </button>
                 <Link
                   href={`/edutech/connecting-book/viewer?bookId=${book.id}`}

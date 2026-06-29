@@ -29,9 +29,9 @@ const SLIDES = [
   },
   {
     badge: "강사 필수",
-    title: <>마이클래스로<br /><span className="text-amber-300">수업 시작</span></>,
+    title: <>마이북으로<br /><span className="text-amber-300">수업 시작</span></>,
     sub: "교재를 담고, 수업안을 만들고, 자료를 다운로드하세요",
-    cta: { label: "마이클래스 가기", href: "/my-class" },
+    cta: { label: "마이북 가기", href: "/my-class" },
     grad: "linear-gradient(135deg, #1a2744 0%, #1e3a5f 50%, #1d4ed8 100%)",
     accent: "#1d4ed8",
   },

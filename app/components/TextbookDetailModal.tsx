@@ -273,7 +273,7 @@ export default function TextbookDetailModal({
                 </div>
               </div>
 
-              {/* 구매 + 마이클래스 버튼 */}
+              {/* 구매 + 마이북 버튼 */}
               <div className="flex items-center gap-2 pt-1">
                 <button
                   onClick={onMyClassToggle}
@@ -288,7 +288,7 @@ export default function TextbookDetailModal({
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                       </svg>
-                      마이클래스 담기
+                      마이북 담기
                     </>
                   )}
                 </button>

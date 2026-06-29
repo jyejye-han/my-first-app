@@ -14,7 +14,7 @@ export default function HomePersonalSection() {
         <span className="text-[#1B3A6B] text-sm font-bold">내 교재</span>
         <span className="text-slate-300 text-sm">·</span>
         <span className="text-slate-500 text-sm font-medium">{ids.length}권 담김</span>
-        <span className="text-slate-400 text-[14px]">(마이클래스에서 수업 자료/AI 평가 즉시 이용)</span>
+        <span className="text-slate-400 text-[14px]">(마이북에서 수업 자료/AI 평가 즉시 이용)</span>
         <Link href="/my-class" className="ml-auto text-slate-400 hover:text-[#1B3A6B] text-sm transition-colors flex items-center gap-1 font-medium shrink-0">
           전체보기
           <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">

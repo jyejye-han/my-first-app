@@ -6,8 +6,8 @@ import HomeBannerSlider from "./components/HomeBannerSlider";
 const banners = [
   {
     id: 1,
-    title: "마이클래스, 수업안 만들기 이용 방법 안내",
-    sub: "마이클래스 기능 및 수업안 작성 가이드",
+    title: "마이북, 수업안 만들기 이용 방법 안내",
+    sub: "마이북 기능 및 수업안 작성 가이드",
     bg: "from-blue-600 to-indigo-700",
     href: "/support/notices?id=7",
   },
@@ -30,7 +30,7 @@ const banners = [
 ];
 
 const notices = [
-  { id: 7,  title: "마이클래스, 수업안 만들기 이용 방법 안내",             date: "2025-06-01", isImportant: true },
+  { id: 7,  title: "마이북, 수업안 만들기 이용 방법 안내",             date: "2025-06-01", isImportant: true },
   { id: 1,  title: "[공지] 2025년 YBM 신규 교재 등록 안내",               date: "2025-05-20", isImportant: true },
   { id: 2,  title: "[공지] 에듀테크 서비스 점검 안내 (5/25 02:00~04:00)", date: "2025-05-18", isImportant: true },
   { id: 3,  title: "AI평가 서비스 정식 출시 안내",                         date: "2025-05-15", isImportant: false },
@@ -40,7 +40,7 @@ const notices = [
 const faqs = [
   { q: "Y튜터는 누가 사용할 수 있나요?" },
   { q: "교재 자료는 어디서 다운받나요?" },
-  { q: "마이클래스 학생 수 제한이 있나요?" },
+  { q: "마이북 학생 수 제한이 있나요?" },
   { q: "유료 서비스는 어떻게 결제하나요?" },
   { q: "E-BOOK은 어떤 기기에서 사용할 수 있나요?" },
 ];

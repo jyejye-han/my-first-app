@@ -30,7 +30,7 @@ function Svg({ d, size = 20 }: { d: React.ReactNode; size?: number }) {
   );
 }
 
-/* ── 책 데이터 (마이클래스와 동일) ── */
+/* ── 책 데이터 (마이북과 동일) ── */
 const BOOKS: Record<string, { title: string; author: string; levelGroup: string; category: string; image?: string; units: { title: string; subtitle: string }[] }> = {
   "1":  { title: "Reading Prime 1", author: "YBM 편집부", levelGroup: "중등", category: "독해", image: "/images/books/reading-prime-1.jpg",
     units: [

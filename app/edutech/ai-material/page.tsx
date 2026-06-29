@@ -502,7 +502,7 @@ function AiMaterialContent() {
         <span>/</span>
         {bookId && (
           <>
-            <Link href="/my-class" className="hover:text-blue-600">마이클래스</Link>
+            <Link href="/my-class" className="hover:text-blue-600">마이북</Link>
             <span>/</span>
           </>
         )}
@@ -523,7 +523,7 @@ function AiMaterialContent() {
         </div>
       </div>
 
-      {/* 연결 교재 배너 (마이클래스에서 진입 시) */}
+      {/* 연결 교재 배너 (마이북에서 진입 시) */}
       {bookId && bookTitle && (
         <div className="flex items-center gap-3 bg-indigo-50 border-2 border-indigo-200 rounded-2xl px-5 py-3.5 mb-4">
           <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center shrink-0">
@@ -532,7 +532,7 @@ function AiMaterialContent() {
             </svg>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider mb-0.5">마이클래스 연결 교재</p>
+            <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider mb-0.5">마이북 연결 교재</p>
             <p className="text-sm font-black text-indigo-800 truncate">{bookTitle}</p>
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
@@ -546,7 +546,7 @@ function AiMaterialContent() {
               href="/my-class"
               className="text-[10px] font-bold text-indigo-500 hover:text-indigo-700 border border-indigo-200 hover:border-indigo-400 px-2.5 py-1 rounded-full transition-colors"
             >
-              마이클래스로
+              마이북으로
             </Link>
           </div>
         </div>

@@ -19,7 +19,7 @@ export default function Footer() {
             <ul className="space-y-2.5 text-sm">
               {[
                 { label: "교재", href: "/textbooks" },
-                { label: "마이클래스", href: "/my-class" },
+                { label: "마이북", href: "/my-class" },
                 { label: "학습로드맵", href: "/roadmap" },
                 { label: "에듀테크", href: "/edutech" },
               ].map((item) => (

@@ -28,7 +28,7 @@ export default async function WorkspacePage({
       <nav className="flex items-center gap-2 text-sm text-slate-500 mb-6">
         <Link href="/" className="hover:text-blue-600">홈</Link>
         <span>/</span>
-        <Link href="/my-class" className="hover:text-blue-600">마이클래스</Link>
+        <Link href="/my-class" className="hover:text-blue-600">마이북</Link>
         <span>/</span>
         <span className="text-slate-800 font-medium">Workspace</span>
       </nav>

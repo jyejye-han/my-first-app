@@ -18,7 +18,7 @@ const RECOMMENDED_BOOKS = [
 ];
 
 const BANNERS = [
-  { title: "마이클래스 이용 방법 안내", sub: "수업안 만들기 가이드", bg: "from-blue-600 to-indigo-700", href: "/m/my-class" },
+  { title: "마이북 이용 방법 안내", sub: "수업안 만들기 가이드", bg: "from-blue-600 to-indigo-700", href: "/m/my-class" },
   { title: "AI평가 서비스 OPEN",        sub: "AI 자동 채점·피드백", bg: "from-violet-600 to-purple-700", href: "/support/notices?id=3" },
   { title: "커넥팅북 E-BOOK 론칭",      sub: "디지털 교재로 스마트 수업", bg: "from-cyan-600 to-teal-700", href: "/support/notices?id=4" },
 ];
@@ -102,7 +102,7 @@ export default function MobileHomePage() {
       <div className="px-4 mt-6 grid grid-cols-2 gap-3">
         <Link href="/m/my-class" className="bg-[#1B3A6B] rounded-2xl p-4 flex flex-col gap-2">
           <span className="text-2xl">📚</span>
-          <p className="text-white font-bold text-sm">마이클래스</p>
+          <p className="text-white font-bold text-sm">마이북</p>
           <p className="text-blue-200 text-xs">담은 교재 관리</p>
         </Link>
         <Link href="/m/edutech" className="bg-amber-400 rounded-2xl p-4 flex flex-col gap-2">

@@ -360,14 +360,14 @@ export default function TextbooksClient() {
         <div className="flex items-center gap-2 mb-3">
           <span className="text-base">📌</span>
           <span className="text-sm font-bold text-slate-700">내교재</span>
-          {isLoggedIn && <span className="text-xs text-slate-400 ml-1">— 마이클래스 담기 버튼으로 추가됩니다</span>}
-          {/* 마이클래스 바로가기 */}
+          {isLoggedIn && <span className="text-xs text-slate-400 ml-1">— 마이북 담기 버튼으로 추가됩니다</span>}
+          {/* 마이북 바로가기 */}
           {isLoggedIn && pinnedBooks.length > 0 && (
             <Link
               href="/my-class"
               className="ml-auto flex items-center gap-1 text-xs text-[#1B3A6B] font-semibold hover:underline"
             >
-              마이클래스 바로가기
+              마이북 바로가기
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
@@ -387,18 +387,18 @@ export default function TextbooksClient() {
           </div>
         ) : pinnedBooks.length === 0 ? (
           <p className="text-xs text-slate-400 py-2 pl-1">
-            담은 교재가 없습니다. 아래 교재에서 <strong className="text-slate-500">마이클래스 담기</strong> 버튼을 눌러 추가해 보세요.
+            담은 교재가 없습니다. 아래 교재에서 <strong className="text-slate-500">마이북 담기</strong> 버튼을 눌러 추가해 보세요.
           </p>
         ) : (
           <>
             <div className="flex flex-wrap gap-3">
               {pinnedBooks.map((b) => (
                 <div key={b.id} className="relative group">
-                  {/* 클릭 → 마이클래스 이동 */}
+                  {/* 클릭 → 마이북 이동 */}
                   <Link
                     href="/my-class"
                     className="flex flex-col items-center gap-1 w-16 p-2 rounded-xl bg-blue-50 border border-blue-200 hover:bg-blue-100 transition-colors"
-                    title="마이클래스에서 확인하기"
+                    title="마이북에서 확인하기"
                   >
                     {b.image ? (
                       <img src={b.image} alt={b.title} className="w-10 h-14 object-cover rounded shadow-sm" />
@@ -425,7 +425,7 @@ export default function TextbooksClient() {
                 <div className="relative flex items-center gap-3 px-4 py-3.5 bg-red-500 rounded-2xl shadow-lg">
                   <span className="text-2xl shrink-0 animate-bounce">📚</span>
                   <p className="text-sm text-white font-semibold leading-snug flex-1">
-                    마이클래스에서 더 다양한 기능을 활용해보세요!<br />
+                    마이북에서 더 다양한 기능을 활용해보세요!<br />
                     <span className="text-red-100 text-xs font-normal">어휘마법사 · 커넥팅북 · 수업안 만들기</span>
                   </p>
                   <Link
@@ -541,16 +541,16 @@ export default function TextbooksClient() {
                           : "bg-[#1B3A6B] hover:bg-[#163060] text-white"
                       }`}
                     >
-                      {isLoggedIn && pinned.includes(book.id) ? "✓ 담김" : "마이클래스 담기"}
+                      {isLoggedIn && pinned.includes(book.id) ? "✓ 담김" : "마이북 담기"}
                     </button>
                     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-[26rem] bg-slate-800 text-white text-[18px] rounded-xl px-6 py-5 leading-relaxed opacity-0 group-hover/tip:opacity-100 pointer-events-none transition-opacity duration-150 z-20 text-center shadow-xl whitespace-normal">
                       <div className="flex items-center justify-center gap-2 mb-1">
                         <svg className="w-5 h-5 text-blue-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                         </svg>
-                        <span className="font-bold">마이클래스</span>
+                        <span className="font-bold">마이북</span>
                       </div>
-                      마이클래스에 교재를 담아서<br />자료 다운로드와 서비스를 이용해보세요
+                      마이북에 교재를 담아서<br />자료 다운로드와 서비스를 이용해보세요
                       <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-slate-800" />
                     </div>
                   </div>

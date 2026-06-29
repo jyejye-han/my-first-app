@@ -472,7 +472,7 @@ export default function MyClassClient() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
             </svg>
           </div>
-          <h2 className="text-xl font-black text-slate-800 mb-2">마이클래스</h2>
+          <h2 className="text-xl font-black text-slate-800 mb-2">마이북</h2>
           <p className="text-slate-500 text-sm mb-6 leading-relaxed">
             로그인 후 이용 가능합니다.<br />
             교재를 담고 수업 자료를 한 곳에서 관리해 보세요.
@@ -502,7 +502,7 @@ export default function MyClassClient() {
         <div className="px-6 pt-7 pb-5">
           <div className="flex items-center gap-2.5 mb-6">
             <span className="text-2xl">🐾</span>
-            <h2 className="font-black text-slate-800 text-lg">마이클래스</h2>
+            <h2 className="font-black text-slate-800 text-lg">마이북</h2>
           </div>
 
           {/* 교재 목록 */}
@@ -534,7 +534,7 @@ export default function MyClassClient() {
                     <button
                       onClick={() => removeBook(id)}
                       className="shrink-0 w-5 h-5 flex items-center justify-center rounded-full text-slate-300 hover:text-white hover:bg-red-400 transition-all opacity-0 group-hover/item:opacity-100 text-xs"
-                      title="마이클래스에서 제거"
+                      title="마이북에서 제거"
                     >
                       ✕
                     </button>
@@ -642,7 +642,7 @@ export default function MyClassClient() {
 
         {/* 페이지 타이틀 */}
         <div className="mb-7">
-          <h1 className="text-3xl font-black text-slate-800">마이클래스</h1>
+          <h1 className="text-3xl font-black text-slate-800">마이북</h1>
           <p className="text-slate-500 text-base mt-1">교재를 담으면 기능을 바로 이용할 수 있어요.</p>
         </div>
 
@@ -651,7 +651,7 @@ export default function MyClassClient() {
           <div className="flex flex-col items-center justify-center py-24 text-center gap-4">
             <span className="text-6xl">📚</span>
             <p className="text-lg font-bold text-slate-600">담은 교재가 없습니다</p>
-            <p className="text-sm text-slate-400">교재 페이지에서 마이클래스 담기를 눌러 추가해보세요.</p>
+            <p className="text-sm text-slate-400">교재 페이지에서 마이북 담기를 눌러 추가해보세요.</p>
             <Link href="/textbooks" className="mt-2 px-6 py-2.5 bg-[#1B3A6B] hover:bg-[#163060] text-white text-sm font-bold rounded-xl transition-colors">
               교재 보러 가기
             </Link>

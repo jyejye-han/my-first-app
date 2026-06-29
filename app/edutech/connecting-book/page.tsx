@@ -82,11 +82,11 @@ function ConnectingBookContent() {
           <span className="text-3xl">📚</span>
           <div className="flex-1">
             <p className="font-semibold text-slate-700 text-sm">선택된 교재가 없습니다</p>
-            <p className="text-xs text-slate-400 mt-0.5">마이클래스에서 교재를 선택한 후 커넥팅북을 이용하세요.</p>
+            <p className="text-xs text-slate-400 mt-0.5">마이북에서 교재를 선택한 후 커넥팅북을 이용하세요.</p>
           </div>
           <div className="flex gap-2 shrink-0">
             <Link href="/my-class" className="px-4 py-2 bg-[#1B3A6B] hover:bg-[#163060] text-white text-sm font-bold rounded-xl transition-colors">
-              마이클래스 가기
+              마이북 가기
             </Link>
             <Link
               href="/edutech/connecting-book/viewer"

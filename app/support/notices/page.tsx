@@ -4,8 +4,8 @@ import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 
 const notices = [
-  { id: 7, title: "마이클래스, 수업안 만들기 이용 방법 안내", date: "2025-06-01", isImportant: true,
-    content: "마이클래스에 교재를 담고, 목차별 수업안 만들기 기능을 통해 수업 자료를 자동으로 구성할 수 있습니다. 어휘마법사·커넥팅북 등 다양한 에듀테크 서비스와 연계하여 더욱 스마트한 수업을 준비해 보세요." },
+  { id: 7, title: "마이북, 수업안 만들기 이용 방법 안내", date: "2025-06-01", isImportant: true,
+    content: "마이북에 교재를 담고, 목차별 수업안 만들기 기능을 통해 수업 자료를 자동으로 구성할 수 있습니다. 어휘마법사·커넥팅북 등 다양한 에듀테크 서비스와 연계하여 더욱 스마트한 수업을 준비해 보세요." },
   { id: 1, title: "[공지] 2025년 YBM 신규 교재 등록 안내", date: "2025-05-20", isImportant: true,
     content: "2025년도 신규 교재가 등록되었습니다. 교재 메뉴에서 확인하실 수 있습니다." },
   { id: 2, title: "[공지] 에듀테크 서비스 점검 안내 (5/25 02:00~04:00)", date: "2025-05-18", isImportant: true,
