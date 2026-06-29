@@ -1,0 +1,387 @@
+"use client";
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { useAuth } from "../lib/useAuth";
+import type { BookDetail } from "../lib/bookDb";
+
+const MATERIALS = [
+  { id: "vocab",     label: "어휘리스트",  type: "PDF",  badge: "bg-red-500"    },
+  { id: "ppt",       label: "강의용 PPT",  type: "PPT",  badge: "bg-orange-500" },
+  { id: "worksheet", label: "워크시트",    type: "PDF",  badge: "bg-red-500"    },
+  { id: "text",      label: "본문파일",    type: "PDF",  badge: "bg-red-500"    },
+  { id: "audio",     label: "듣기파일",    type: "MP3",  badge: "bg-cyan-500"   },
+];
+
+function renderDescription(text: string) {
+  return text.split("\n").map((line, i) => {
+    if (/^\[.+\]$/.test(line.trim()))
+      return <p key={i} className="font-bold text-slate-800 mt-4 mb-1 text-sm">{line.trim()}</p>;
+    if (line.startsWith("- "))
+      return <p key={i} className="text-sm text-slate-600 leading-relaxed pl-3">• {line.slice(2)}</p>;
+    if (line.startsWith("* "))
+      return <p key={i} className="text-sm font-semibold text-slate-700 mt-2">{line.slice(2)}</p>;
+    if (line.startsWith(": "))
+      return <p key={i} className="text-sm text-slate-500 leading-relaxed pl-3 mb-1">{line.slice(2)}</p>;
+    if (line.trim() === "") return <div key={i} className="h-1" />;
+    return <p key={i} className="text-sm text-slate-700 leading-relaxed">{line}</p>;
+  });
+}
+
+function DocIcon() {
+  return (
+    <svg className="w-4 h-4 shrink-0 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    </svg>
+  );
+}
+
+function Mp3Icon() {
+  return (
+    <svg className="w-4 h-4 shrink-0 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+    </svg>
+  );
+}
+
+export default function TextbookDetailModal({
+  book,
+  onClose,
+  onMyClassToggle,
+  isPinned,
+}: {
+  book: BookDetail;
+  onClose: () => void;
+  onMyClassToggle: () => void;
+  isPinned: boolean;
+}) {
+  const [activeTab, setActiveTab] = useState<"intro" | "toc">("intro");
+  const [teacherAlert, setTeacherAlert] = useState<"login" | "noRole" | null>(null);
+  const { isLoggedIn, isTeacher } = useAuth();
+
+  // ESC 키로 닫기
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  // 스크롤 잠금
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = ""; };
+  }, []);
+
+  const handleTeacherAction = (cb: () => void) => {
+    if (!isLoggedIn) { setTeacherAlert("login"); return; }
+    if (!isTeacher)  { setTeacherAlert("noRole"); return; }
+    cb();
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="relative bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* 헤더 */}
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 shrink-0">
+          <span className="text-sm font-bold text-slate-700">교재 상세</span>
+          <div className="flex items-center gap-2">
+            <Link
+              href={`/textbooks/${book.id}`}
+              className="text-xs text-[#1B3A6B] font-semibold hover:underline"
+              onClick={onClose}
+            >
+              전체 페이지에서 보기 →
+            </Link>
+            <button
+              onClick={onClose}
+              className="w-7 h-7 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        {/* 스크롤 영역 */}
+        <div className="overflow-y-auto flex-1">
+          {/* 상단: 표지 + 정보 */}
+          <div className="p-5 flex gap-5">
+            {/* 표지 */}
+            <div className="shrink-0 flex flex-col gap-2">
+              {book.image ? (
+                <img
+                  src={book.image}
+                  alt={book.title}
+                  className="w-[130px] h-[184px] object-cover rounded-xl shadow-md border border-slate-100"
+                />
+              ) : (
+                <div className="w-[130px] h-[184px] bg-gradient-to-br from-blue-50 to-indigo-100 rounded-xl flex items-center justify-center text-6xl shadow-md border border-slate-100">
+                  {book.emoji}
+                </div>
+              )}
+              <div className="flex gap-1.5 w-[130px]">
+                <button className="flex-1 py-1.5 border border-slate-200 rounded-lg text-[11px] font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
+                  미리보기
+                </button>
+                <button className="flex-1 py-1.5 border border-slate-200 rounded-lg text-[11px] font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
+                  크게보기
+                </button>
+              </div>
+            </div>
+
+            {/* 우측 정보 */}
+            <div className="flex-1 min-w-0 flex flex-col gap-3">
+              {/* 태그 */}
+              <div className="flex flex-wrap gap-1.5">
+                {["참고서", book.levelGroup, "영어", book.category].map((tag) => (
+                  <span key={tag} className="text-[11px] text-slate-600 border border-slate-300 rounded-full px-2.5 py-0.5">
+                    {tag}
+                  </span>
+                ))}
+                {book.isNew && (
+                  <span className="text-[11px] bg-red-500 text-white rounded-full px-2.5 py-0.5 font-bold">NEW</span>
+                )}
+              </div>
+
+              {/* 제목 */}
+              <h2 className="text-xl font-black text-slate-900 leading-tight">{book.title}</h2>
+
+              {/* 저자 · 출판사 · 날짜 */}
+              <p className="text-xs text-slate-500">
+                저자 <span className="font-semibold text-slate-700">{book.author}</span>
+                {" · "}출판사 <span className="font-semibold text-slate-700">YBM</span>
+                {" · "}{book.publishDate}
+                {book.pages && <>{" · "}<span className="text-slate-400">{book.pages}p</span></>}
+              </p>
+
+              <div className="border-t border-slate-100" />
+
+              {/* 제공 서비스 */}
+              <div>
+                <p className="text-xs font-bold text-slate-600 mb-2">제공 서비스</p>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {[
+                    { label: "MP3 바로 듣기",  icon: "mp3",  needLogin: false, href: "https://miracle03945-eng.github.io/booksam-v3/resources.html?tab=study&stab=mp3"     },
+                    { label: "온라인어휘학습기", icon: "star", needLogin: true,  href: null                                                                                    },
+                    { label: "문법예문뱅크",    icon: "db",   needLogin: true,  href: "https://miracle03945-eng.github.io/booksam-v3/resources.html?tab=study&stab=grammar"  },
+                  ].map((svc) => {
+                    const cls = "flex items-center gap-1.5 px-2.5 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 transition-colors text-left w-full";
+                    const inner = (
+                      <>
+                        {svc.icon === "mp3" && (
+                          <svg className="w-3.5 h-3.5 text-slate-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                          </svg>
+                        )}
+                        {svc.icon === "star" && (
+                          <svg className="w-3.5 h-3.5 text-slate-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                          </svg>
+                        )}
+                        {svc.icon === "db" && (
+                          <svg className="w-3.5 h-3.5 text-slate-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+                          </svg>
+                        )}
+                        <span className="flex-1 text-[11px] font-medium text-slate-700 truncate">{svc.label}</span>
+                        {svc.needLogin && (
+                          <span className="shrink-0 text-[9px] bg-orange-100 text-orange-600 border border-orange-200 px-1 py-0.5 rounded font-bold whitespace-nowrap">
+                            로그인
+                          </span>
+                        )}
+                      </>
+                    );
+                    if (!svc.needLogin && svc.href) {
+                      return <a key={svc.label} href={svc.href} target="_blank" rel="noopener noreferrer" className={cls}>{inner}</a>;
+                    }
+                    return (
+                      <button
+                        key={svc.label}
+                        onClick={() => handleTeacherAction(() => { if (svc.href) window.open(svc.href, "_blank", "noopener,noreferrer"); })}
+                        className={cls}
+                      >{inner}</button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 부가자료 */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-bold text-slate-600">부가자료</p>
+                  <button className="flex items-center gap-1 px-2.5 py-1 border border-slate-700 rounded-lg text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition-colors">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    자료 일괄 다운로드
+                  </button>
+                </div>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {[
+                    { id: "errata",  label: "정오표",      icon: "doc", free: true  },
+                    { id: "answer",  label: "정답 및 해설", icon: "doc", free: true  },
+                    { id: "mp3file", label: "MP3 파일",    icon: "mp3", free: false },
+                  ].map((file) => (
+                    <button
+                      key={file.id}
+                      onClick={!file.free ? () => handleTeacherAction(() => {}) : undefined}
+                      className="flex items-center gap-1.5 px-2.5 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 transition-colors text-left"
+                    >
+                      {file.icon === "mp3" ? <Mp3Icon /> : <DocIcon />}
+                      <span className="flex-1 text-[11px] font-medium text-slate-700 truncate">{file.label}</span>
+                      {!file.free ? (
+                        <span className="shrink-0 text-[9px] bg-orange-100 text-orange-600 border border-orange-200 px-1 py-0.5 rounded font-bold whitespace-nowrap">
+                          로그인
+                        </span>
+                      ) : (
+                        <svg className="w-3 h-3 shrink-0 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                      )}
+                    </button>
+                  ))}
+                </div>
+
+                {/* 교사용 자료 */}
+                <div className="mt-2 border border-blue-200 rounded-xl overflow-hidden">
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 border-b border-blue-200">
+                    <span className="w-1 h-3.5 bg-blue-500 rounded-full shrink-0" />
+                    <span className="text-[11px] font-bold text-blue-700">교사용 자료</span>
+                  </div>
+                  <div className="grid grid-cols-2 divide-x divide-y divide-blue-100">
+                    {MATERIALS.map((m) => (
+                      <div key={m.id} className="flex items-center gap-2 px-2.5 py-2 bg-white hover:bg-blue-50/40 transition-colors">
+                        <span className={`shrink-0 text-[9px] font-bold text-white px-1.5 py-0.5 rounded ${m.badge}`}>{m.type}</span>
+                        <span className="flex-1 text-[11px] font-medium text-slate-700 truncate">{m.label}</span>
+                        <button
+                          onClick={() => handleTeacherAction(() => {})}
+                          className="shrink-0 text-slate-500 hover:text-blue-600 transition-colors"
+                        >
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* 구매 + 마이북 버튼 */}
+              <div className="flex items-center gap-2 pt-1">
+                <button
+                  onClick={onMyClassToggle}
+                  className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all ${
+                    isPinned
+                      ? "bg-blue-100 text-blue-700 border border-blue-300"
+                      : "bg-[#1B3A6B] hover:bg-[#163060] text-white"
+                  }`}
+                >
+                  {isPinned ? "✓ 담김" : (
+                    <>
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                      마이북 담기
+                    </>
+                  )}
+                </button>
+                <button className="flex-1 h-9 bg-slate-800 hover:bg-slate-900 text-white font-black rounded-xl text-xs flex items-center justify-center gap-1.5 transition-colors">
+                  교보문고에서 구매하기
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* 탭: 도서 소개 / 목차 */}
+          <div className="border-t border-slate-200">
+            <div className="flex">
+              {(["intro", "toc"] as const).map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`flex-1 py-3 text-xs font-bold transition-colors ${
+                    activeTab === tab
+                      ? "bg-slate-800 text-white"
+                      : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                  }`}
+                >
+                  {tab === "intro" ? "도서 소개" : "목차"}
+                </button>
+              ))}
+            </div>
+            <div className="p-5">
+              {activeTab === "intro" && (
+                <div className="space-y-0.5">{renderDescription(book.description)}</div>
+              )}
+              {activeTab === "toc" && book.toc && book.toc.length > 0 && (
+                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1">
+                  {book.toc.map((item, i) => (
+                    <li key={i} className="flex items-center gap-2.5 py-1.5 border-b border-slate-50">
+                      <span className="w-5 h-5 bg-blue-50 text-blue-600 rounded-full text-[10px] font-bold flex items-center justify-center shrink-0">
+                        {i + 1}
+                      </span>
+                      <span className="text-xs text-slate-600">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {activeTab === "toc" && (!book.toc || book.toc.length === 0) && (
+                <p className="text-xs text-slate-400">목차 정보가 없습니다.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 교사용 자료 접근 알럿 */}
+      {teacherAlert && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40" onClick={() => setTeacherAlert(null)}>
+          <div className="bg-white rounded-2xl p-6 max-w-xs w-full mx-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex flex-col items-center gap-3 text-center">
+              <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center">
+                <svg className="w-6 h-6 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                </svg>
+              </div>
+              <p className="text-sm font-bold text-slate-800">
+                {teacherAlert === "login" ? "로그인이 필요합니다." : "선생님 회원만 이용하실 수 있습니다."}
+              </p>
+              <p className="text-xs text-slate-500">
+                {teacherAlert === "login"
+                  ? "교사용 자료는 로그인 후 이용할 수 있습니다."
+                  : "해당 자료는 강사 회원 전용 서비스입니다."}
+              </p>
+              <div className="flex gap-2 w-full mt-1">
+                {teacherAlert === "login" && (
+                  <Link
+                    href="/login"
+                    onClick={() => setTeacherAlert(null)}
+                    className="flex-1 py-2.5 bg-[#1B3A6B] hover:bg-[#163060] text-white text-sm font-bold rounded-xl transition-colors text-center"
+                  >
+                    로그인하기
+                  </Link>
+                )}
+                <button
+                  onClick={() => setTeacherAlert(null)}
+                  className="flex-1 py-2.5 border border-slate-200 text-slate-600 text-sm font-semibold rounded-xl hover:bg-slate-50 transition-colors"
+                >
+                  닫기
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

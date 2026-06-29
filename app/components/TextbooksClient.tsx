@@ -1,8 +1,12 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useMyClassBooks } from "../lib/useMyClassBooks";
+import { useAuth } from "../lib/useAuth";
+import { BOOK_DB } from "../lib/bookDb";
+
+type ResourceType = "MP3" | "강의용PPT" | "기타" | "보충문제" | "본문파일" | "워크시트" | "정답&해설" | "온라인 수업자료" | "어휘리스트";
 
 type Book = {
   id: string;
@@ -16,6 +20,21 @@ type Book = {
   description: string;
   isNew?: boolean;
 };
+
+function renderDescription(text: string) {
+  return text.split("\n").map((line, i) => {
+    if (/^\[.+\]$/.test(line.trim()))
+      return <p key={i} className="font-bold text-slate-800 mt-4 mb-1 text-sm">{line.trim()}</p>;
+    if (line.startsWith("- "))
+      return <p key={i} className="text-sm text-slate-600 leading-relaxed pl-3">• {line.slice(2)}</p>;
+    if (line.startsWith("* "))
+      return <p key={i} className="text-sm font-semibold text-slate-700 mt-2">{line.slice(2)}</p>;
+    if (line.startsWith(": "))
+      return <p key={i} className="text-sm text-slate-500 leading-relaxed pl-3 mb-1">{line.slice(2)}</p>;
+    if (line.trim() === "") return <div key={i} className="h-1" />;
+    return <p key={i} className="text-sm text-slate-700 leading-relaxed">{line}</p>;
+  });
+}
 
 const BOOKS: Book[] = [
   {
@@ -130,70 +149,163 @@ const BOOKS: Book[] = [
   },
 ];
 
+const BOOK_RESOURCES: Record<string, ResourceType[]> = {
+  "1":  ["MP3", "어휘리스트", "본문파일", "워크시트", "정답&해설"],
+  "2":  ["어휘리스트", "강의용PPT", "보충문제", "워크시트", "정답&해설"],
+  "3":  ["MP3", "어휘리스트", "강의용PPT", "온라인 수업자료", "정답&해설"],
+  "4":  ["어휘리스트", "강의용PPT", "보충문제", "워크시트", "정답&해설"],
+  "5":  ["MP3", "어휘리스트", "보충문제", "정답&해설", "온라인 수업자료"],
+  "6":  ["MP3", "어휘리스트", "본문파일", "워크시트", "정답&해설"],
+  "7":  ["MP3", "강의용PPT", "온라인 수업자료", "기타"],
+  "8":  ["어휘리스트", "보충문제", "워크시트", "정답&해설"],
+  "9":  ["MP3", "어휘리스트", "보충문제", "본문파일", "워크시트", "정답&해설"],
+  "10": ["어휘리스트", "본문파일", "강의용PPT", "워크시트", "정답&해설"],
+  "11": ["어휘리스트", "본문파일", "강의용PPT", "정답&해설"],
+  "12": ["MP3", "어휘리스트", "본문파일", "정답&해설", "온라인 수업자료"],
+  "13": ["MP3", "어휘리스트", "본문파일", "워크시트", "정답&해설"],
+  "14": ["어휘리스트", "본문파일", "강의용PPT", "워크시트", "정답&해설"],
+  "15": ["어휘리스트", "보충문제", "본문파일", "정답&해설", "온라인 수업자료"],
+  "16": ["MP3", "정답&해설", "온라인 수업자료"],
+};
+
 const LEVEL_TABS = ["전체", "초등", "중등", "고등"] as const;
 type LevelTab = (typeof LEVEL_TABS)[number];
 
-// 검색필터 패널 (상세필터 논의 필요 버전)
-function FilterPanel({
-  open, levelFilter, onLevelChange, onClose,
-}: {
-  open: boolean;
-  levelFilter: string[];
-  onLevelChange: (v: string) => void;
-  onClose: () => void;
-}) {
-  if (!open) return null;
+function ResourceBadge({ type, onClick }: { type: ResourceType; onClick?: () => void }) {
+  const getIcon = () => {
+    switch (type) {
+      case "MP3":
+        return (
+          <svg viewBox="0 0 18 18" className="w-5 h-5 shrink-0">
+            <path d="M3 9a6 6 0 0 0 12 0" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" fill="none"/>
+            <rect x="1.5" y="9" width="3" height="4.5" rx="1" fill="#ef4444"/>
+            <rect x="13.5" y="9" width="3" height="4.5" rx="1" fill="#ef4444"/>
+          </svg>
+        );
+      case "강의용PPT":
+        return (
+          <svg viewBox="0 0 18 18" className="w-5 h-5 shrink-0">
+            <rect x="1" y="2.5" width="16" height="10" rx="1.5" fill="#64748b"/>
+            <rect x="2.5" y="4" width="13" height="7" rx="0.5" fill="white"/>
+            <rect x="5" y="5.5" width="8" height="1" rx="0.5" fill="#3b82f6"/>
+            <rect x="5" y="7.5" width="5" height="1" rx="0.5" fill="#94a3b8"/>
+            <path d="M0.5 14h17" stroke="#94a3b8" strokeWidth="1.2" strokeLinecap="round" fill="none"/>
+            <path d="M6.5 14l1 2M11.5 14l-1 2" stroke="#94a3b8" strokeWidth="1.2" strokeLinecap="round" fill="none"/>
+          </svg>
+        );
+      case "기타":
+        return (
+          <svg viewBox="0 0 18 18" className="w-5 h-5 shrink-0">
+            <circle cx="9" cy="9" r="7.5" fill="#e2e8f0" stroke="#94a3b8" strokeWidth="1.2"/>
+            <path d="M9 9 L9 1.5 A7.5 7.5 0 0 1 16.5 9 Z" fill="#94a3b8"/>
+          </svg>
+        );
+      case "보충문제":
+        return (
+          <svg viewBox="0 0 18 18" className="w-5 h-5 shrink-0">
+            <rect x="2" y="1" width="12" height="16" rx="1.2" fill="#fb923c"/>
+            <path d="M5 6h7M5 9h7M5 12h5" stroke="white" strokeWidth="1.2" strokeLinecap="round" fill="none"/>
+            <circle cx="14" cy="14" r="3.5" fill="#ef4444"/>
+            <path d="M12.5 14h3M14 12.5v3" stroke="white" strokeWidth="1.2" strokeLinecap="round" fill="none"/>
+          </svg>
+        );
+      case "본문파일":
+        return (
+          <svg viewBox="0 0 18 18" className="w-5 h-5 shrink-0">
+            <path d="M1.5 4H9v12L1.5 14V4z" fill="#dbeafe" stroke="#3b82f6" strokeWidth="1.1"/>
+            <path d="M9 4h7.5v10L9 16V4z" fill="#bfdbfe" stroke="#3b82f6" strokeWidth="1.1"/>
+            <path d="M3.5 7h3.5M3.5 9.5h2.5" stroke="#3b82f6" strokeWidth="0.9" strokeLinecap="round" fill="none"/>
+            <path d="M11 7h3.5M11 9.5h2.5" stroke="#3b82f6" strokeWidth="0.9" strokeLinecap="round" fill="none"/>
+          </svg>
+        );
+      case "워크시트":
+        return (
+          <svg viewBox="0 0 18 18" className="w-5 h-5 shrink-0">
+            <rect x="1.5" y="11" width="3.5" height="5.5" rx="0.5" fill="#ef4444"/>
+            <rect x="7" y="7" width="3.5" height="9.5" rx="0.5" fill="#3b82f6"/>
+            <rect x="12.5" y="3" width="3.5" height="13.5" rx="0.5" fill="#ef4444"/>
+            <path d="M1 17.5h16" stroke="#64748b" strokeWidth="1" strokeLinecap="round" fill="none"/>
+          </svg>
+        );
+      case "정답&해설":
+        return (
+          <svg viewBox="0 0 18 18" className="w-5 h-5 shrink-0">
+            <circle cx="9" cy="9" r="8" stroke="#ef4444" strokeWidth="1.4" fill="none"/>
+            <circle cx="9" cy="9" r="5" stroke="#ef4444" strokeWidth="1.4" fill="none"/>
+            <circle cx="9" cy="9" r="2" fill="#ef4444"/>
+          </svg>
+        );
+      case "온라인 수업자료":
+        return (
+          <svg viewBox="0 0 18 18" className="w-5 h-5 shrink-0">
+            <circle cx="9" cy="9" r="7.5" fill="#eff6ff" stroke="#3b82f6" strokeWidth="1.3"/>
+            <ellipse cx="9" cy="9" rx="3.8" ry="7.5" stroke="#3b82f6" strokeWidth="1" fill="none"/>
+            <path d="M1.5 9h15M3 5.5h12M3 12.5h12" stroke="#3b82f6" strokeWidth="0.9" strokeLinecap="round" fill="none"/>
+          </svg>
+        );
+      case "어휘리스트":
+        return (
+          <svg viewBox="0 0 18 18" className="w-5 h-5 shrink-0">
+            <rect x="1.5" y="1.5" width="15" height="15" rx="2" fill="#f0fdf4" stroke="#22c55e" strokeWidth="1.3"/>
+            <path d="M4 5.5h10M4 9h10M4 12.5h6" stroke="#22c55e" strokeWidth="1.2" strokeLinecap="round" fill="none"/>
+            <circle cx="14" cy="12.5" r="2.5" fill="#22c55e"/>
+            <path d="M13 12.5l.8.8 1.5-1.5" stroke="white" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+          </svg>
+        );
+    }
+  };
   return (
-    <div className="mt-2 bg-white rounded-2xl border border-slate-200 shadow-xl p-5">
-      <div className="flex items-center gap-4 flex-wrap">
-        <span className="text-sm font-semibold text-slate-700 shrink-0">이용대상</span>
-        <div className="flex gap-2">
-          {["초등", "중등", "고등", "성인"].map((lv) => (
-            <button
-              key={lv}
-              onClick={() => onLevelChange(lv)}
-              className={`px-4 py-1.5 rounded-full text-sm font-semibold border transition-all ${
-                levelFilter.includes(lv)
-                  ? "bg-[#1B3A6B] border-[#1B3A6B] text-white"
-                  : "bg-white border-slate-200 text-slate-600 hover:border-blue-300 hover:text-blue-700"
-              }`}
-            >
-              {lv}
-            </button>
-          ))}
-        </div>
-      </div>
-      <div className="mt-4 flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5">
-        <svg className="w-4 h-4 text-amber-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-        </svg>
-        <p className="text-xs text-amber-700 font-medium">상세 필터는 논의 필요</p>
-      </div>
-      <div className="mt-4 flex justify-end gap-2">
-        <button onClick={() => { onLevelChange("__clear__"); }} className="px-4 py-2 text-sm text-slate-500 hover:text-slate-700 border border-slate-200 rounded-xl">초기화</button>
-        <button onClick={onClose} className="px-5 py-2 text-sm font-semibold bg-[#1B3A6B] hover:bg-[#163060] text-white rounded-xl">적용</button>
-      </div>
-    </div>
+    <button
+      onClick={onClick}
+      className="flex items-center gap-2 text-xs text-slate-600 font-medium hover:text-blue-600 transition-colors"
+    >
+      {getIcon()}
+      {type}
+    </button>
   );
 }
 
 export default function TextbooksClient() {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const { isLoggedIn } = useAuth();
   const { ids: pinned, addBook, removeBook, hasBook } = useMyClassBooks();
-  const [query, setQuery] = useState(searchParams.get("q") ?? "");
-  const [filterOpen, setFilterOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<LevelTab>("전체");
-  const [detailFilter, setDetailFilter] = useState<string[]>([]);
-
-  // URL 파라미터 변경 시 검색어 동기화
-  useEffect(() => {
-    const q = searchParams.get("q");
-    setQuery(q ?? "");
-  }, [searchParams]);
-
   const [showGuide, setShowGuide] = useState(false);
+  const [sortByDate, setSortByDate] = useState(false);
+  const [loginToast, setLoginToast] = useState(false);
+  const [detailBookId, setDetailBookId] = useState<string | null>(null);
+  const [inlineTab, setInlineTab] = useState<"intro" | "toc">("intro");
+
+  const query   = searchParams.get("q") ?? "";
+  const urlLevels = (searchParams.get("levels") ?? "").split(",").filter(Boolean);
+  const openParam = searchParams.get("open");
+
+  useEffect(() => {
+    if (!openParam) return;
+    setDetailBookId(openParam);
+    setInlineTab("intro");
+    setTimeout(() => {
+      document.getElementById(`book-${openParam}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 100);
+  }, []);
+
+  const handleResourceClick = (bookId: string) => {
+    if (!isLoggedIn) {
+      setLoginToast(true);
+      setTimeout(() => { setLoginToast(false); router.push("/login?next=/my-class"); }, 1500);
+      return;
+    }
+    if (!hasBook(bookId)) addBook(bookId);
+    router.push(`/my-class?book=${bookId}`);
+  };
 
   const togglePin = (id: string) => {
+    if (!isLoggedIn) {
+      setLoginToast(true);
+      setTimeout(() => { setLoginToast(false); router.push("/login?next=/my-class"); }, 1500);
+      return;
+    }
     if (hasBook(id)) {
       removeBook(id);
     } else {
@@ -203,26 +315,41 @@ export default function TextbooksClient() {
     }
   };
 
-  const toggleDetail = (v: string) => {
-    if (v === "__clear__") { setDetailFilter([]); return; }
-    setDetailFilter((prev) => prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v]);
-  };
-
   const filtered = BOOKS
     .filter((b) => {
-      const matchTab = activeTab === "전체" || b.levelGroup === activeTab;
+      const matchTab   = activeTab === "전체" || b.levelGroup === activeTab;
       const matchQuery = !query ||
         b.title.toLowerCase().includes(query.toLowerCase()) ||
         b.author.toLowerCase().includes(query.toLowerCase());
-      const matchDetail = detailFilter.length === 0 || detailFilter.includes(b.levelGroup);
-      return matchTab && matchQuery && matchDetail;
+      const matchLevel = urlLevels.length === 0 || urlLevels.includes(b.levelGroup);
+      return matchTab && matchQuery && matchLevel;
     })
-    .sort((a, b) => (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0));
+    .sort((a, b) => {
+      if (sortByDate) {
+        return b.publishDate.localeCompare(a.publishDate);
+      }
+      return (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0);
+    });
 
-  const pinnedBooks = BOOKS.filter((b) => pinned.includes(b.id));
+  const topNewBooks = filtered.filter(b => b.isNew).slice(0, 3);
+  const topNewIds = new Set(topNewBooks.map(b => b.id));
+  const displayBooks = [...topNewBooks, ...filtered.filter(b => !topNewIds.has(b.id))];
+
+  const pinnedBooks = isLoggedIn ? BOOKS.filter((b) => pinned.includes(b.id)) : [];
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+      {/* 로그인 필요 토스트 */}
+      {loginToast && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-slate-800 text-white text-sm font-semibold px-5 py-3 rounded-xl shadow-xl flex items-center gap-2">
+          <svg className="w-4 h-4 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m0-6v2m0-10a9 9 0 100 18 9 9 0 000-18z" />
+          </svg>
+          로그인이 필요합니다. 로그인 페이지로 이동합니다.
+        </div>
+      )}
+
       <div className="mb-6">
         <h1 className="text-2xl font-black text-slate-800">교재</h1>
         <p className="text-slate-500 text-sm mt-1">강사 전용 교재 목록을 확인하세요</p>
@@ -233,14 +360,14 @@ export default function TextbooksClient() {
         <div className="flex items-center gap-2 mb-3">
           <span className="text-base">📌</span>
           <span className="text-sm font-bold text-slate-700">내교재</span>
-          <span className="text-xs text-slate-400 ml-1">— 마이클래스 담기 버튼으로 추가됩니다</span>
-          {/* 마이클래스 바로가기 */}
-          {pinnedBooks.length > 0 && (
+          {isLoggedIn && <span className="text-xs text-slate-400 ml-1">— 마이북 담기 버튼으로 추가됩니다</span>}
+          {/* 마이북 바로가기 */}
+          {isLoggedIn && pinnedBooks.length > 0 && (
             <Link
               href="/my-class"
               className="ml-auto flex items-center gap-1 text-xs text-[#1B3A6B] font-semibold hover:underline"
             >
-              마이클래스 바로가기
+              마이북 바로가기
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
@@ -248,20 +375,30 @@ export default function TextbooksClient() {
           )}
         </div>
 
-        {pinnedBooks.length === 0 ? (
+        {!isLoggedIn ? (
+          <div className="flex items-center gap-3 py-2 pl-1">
+            <p className="text-xs text-slate-400">로그인 후 이용 가능합니다.</p>
+            <Link
+              href="/login?next=/textbooks"
+              className="flex items-center gap-1 text-xs font-semibold text-white bg-[#1B3A6B] hover:bg-[#163060] px-3 py-1.5 rounded-lg transition-colors"
+            >
+              로그인
+            </Link>
+          </div>
+        ) : pinnedBooks.length === 0 ? (
           <p className="text-xs text-slate-400 py-2 pl-1">
-            담은 교재가 없습니다. 아래 교재에서 <strong className="text-slate-500">마이클래스 담기</strong> 버튼을 눌러 추가해 보세요.
+            담은 교재가 없습니다. 아래 교재에서 <strong className="text-slate-500">마이북 담기</strong> 버튼을 눌러 추가해 보세요.
           </p>
         ) : (
           <>
             <div className="flex flex-wrap gap-3">
               {pinnedBooks.map((b) => (
                 <div key={b.id} className="relative group">
-                  {/* 클릭 → 마이클래스 이동 */}
+                  {/* 클릭 → 마이북 이동 */}
                   <Link
                     href="/my-class"
                     className="flex flex-col items-center gap-1 w-16 p-2 rounded-xl bg-blue-50 border border-blue-200 hover:bg-blue-100 transition-colors"
-                    title="마이클래스에서 확인하기"
+                    title="마이북에서 확인하기"
                   >
                     {b.image ? (
                       <img src={b.image} alt={b.title} className="w-10 h-14 object-cover rounded shadow-sm" />
@@ -288,7 +425,7 @@ export default function TextbooksClient() {
                 <div className="relative flex items-center gap-3 px-4 py-3.5 bg-red-500 rounded-2xl shadow-lg">
                   <span className="text-2xl shrink-0 animate-bounce">📚</span>
                   <p className="text-sm text-white font-semibold leading-snug flex-1">
-                    마이클래스에서 더 다양한 기능을 활용해보세요!<br />
+                    마이북에서 더 다양한 기능을 활용해보세요!<br />
                     <span className="text-red-100 text-xs font-normal">어휘마법사 · 커넥팅북 · 수업안 만들기</span>
                   </p>
                   <Link
@@ -314,52 +451,6 @@ export default function TextbooksClient() {
         )}
       </div>
 
-      {/* ── 검색 + 필터 ── */}
-      <div className="mb-5">
-        <div className="bg-white rounded-2xl border-2 border-[#1B3A6B] p-3 flex gap-2 shadow-sm">
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="교재명·저자 검색"
-            className="flex-1 text-sm text-slate-700 px-3 py-2 focus:outline-none rounded-lg"
-          />
-          <button className="bg-[#1B3A6B] hover:bg-[#163060] text-white px-5 py-2 rounded-xl text-sm font-semibold transition-colors flex items-center gap-1.5">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            검색
-          </button>
-          <button
-            onClick={() => setFilterOpen((v) => !v)}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold border transition-all ${
-              filterOpen || detailFilter.length > 0
-                ? "bg-blue-50 border-blue-400 text-blue-700"
-                : "bg-white border-slate-200 text-slate-600 hover:border-blue-300 hover:text-blue-700"
-            }`}
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z" />
-            </svg>
-            검색필터
-            {detailFilter.length > 0 && (
-              <span className="w-4 h-4 bg-blue-600 text-white text-[10px] font-black rounded-full flex items-center justify-center">
-                {detailFilter.length}
-              </span>
-            )}
-            <svg className={`w-3 h-3 transition-transform ${filterOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-        </div>
-        <FilterPanel
-          open={filterOpen}
-          levelFilter={detailFilter}
-          onLevelChange={toggleDetail}
-          onClose={() => setFilterOpen(false)}
-        />
-      </div>
-
       {/* ── 레벨 탭 필터 ── */}
       <div className="flex gap-2 mb-5">
         {LEVEL_TABS.map((tab) => (
@@ -375,84 +466,161 @@ export default function TextbooksClient() {
             {tab}
           </button>
         ))}
-        <span className="ml-auto text-xs text-slate-400 self-center">{filtered.length}권</span>
+        <div className="ml-auto flex items-center gap-2">
+          <button
+            onClick={() => setSortByDate((v) => !v)}
+            className={`flex items-center gap-1 text-xs font-semibold transition-colors ${
+              sortByDate ? "text-[#1B3A6B]" : "text-slate-400 hover:text-slate-600"
+            }`}
+          >
+            출간일순
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h18M12 8v12M8 16l4 4 4-4" />
+            </svg>
+          </button>
+          <span className="text-xs text-slate-400">{filtered.length}권</span>
+        </div>
       </div>
 
       {/* ── 교재 리스트 ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filtered.map((book, idx) => (
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        {displayBooks.map((book) => (
+          <div key={book.id} id={`book-${book.id}`} className="border-b border-slate-100 last:border-b-0">
           <div
-            key={book.id}
-            className="bg-white rounded-2xl border border-slate-200 hover:shadow-md hover:border-blue-300 transition-all duration-200 group overflow-hidden"
+            className="flex gap-7 px-7 py-7 hover:bg-slate-50 transition-colors group"
           >
-            <Link href={`/textbooks/${book.id}`} className="block p-5">
-              <div className="flex gap-4">
-                {/* 표지 이미지 or 이모지 */}
-                {book.image ? (
-                  <img
-                    src={book.image}
-                    alt={book.title}
-                    className="w-14 h-20 object-cover rounded-lg shrink-0 shadow-sm border border-slate-100"
-                  />
-                ) : (
-                  <div className="text-5xl shrink-0 w-14 flex items-center justify-center">{book.emoji}</div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="font-bold text-slate-800 group-hover:text-blue-700 text-sm leading-snug">
-                      {book.title}
-                    </p>
-                    {book.isNew && idx < 3 && (
-                      <span className="shrink-0 text-[10px] bg-red-500 text-white px-1.5 py-0.5 rounded-full font-bold">NEW</span>
-                    )}
-                  </div>
-                  {/* 저자 / 출간일 */}
-                  <p className="text-xs text-slate-500 mt-1">
-                    {book.author} · <span className="text-slate-400">{book.publishDate}</span>
-                  </p>
-                  {/* 한줄소개 */}
-                  <p className="text-xs text-slate-500 mt-1.5 leading-relaxed line-clamp-2">
-                    {book.description}
-                  </p>
-                  {/* 태그 */}
-                  <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                    <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">{book.levelGroup}</span>
-                    <span className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">{book.category}</span>
-                  </div>
+            {/* 표지 */}
+            <div className="shrink-0">
+              {book.image ? (
+                <img
+                  src={book.image}
+                  alt={book.title}
+                  className="w-[120px] h-[162px] object-cover rounded-xl shadow-md border border-slate-100"
+                />
+              ) : (
+                <div className="w-[120px] h-[162px] bg-gradient-to-br from-blue-50 to-indigo-100 rounded-xl flex items-center justify-center text-5xl shadow-md">
+                  {book.emoji}
                 </div>
-              </div>
-            </Link>
-
-            {/* 액션 버튼 */}
-            <div className="flex gap-1.5 px-4 pb-4">
-              {/* 마이클래스 담기 + 툴팁 */}
-              <div className="relative flex-1 group/tip">
-                <button
-                  onClick={() => togglePin(book.id)}
-                  className={`w-full text-center text-xs py-2 rounded-lg font-semibold transition-all leading-tight ${
-                    pinned.includes(book.id)
-                      ? "bg-blue-100 text-blue-700 border border-blue-300"
-                      : "bg-[#1B3A6B] hover:bg-[#163060] text-white"
-                  }`}
-                >
-                  {pinned.includes(book.id) ? "✓ 담김" : "마이클래스 담기"}
-                </button>
-                {/* 툴팁 */}
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-52 bg-slate-800 text-white text-[11px] rounded-xl px-3 py-2.5 leading-relaxed opacity-0 group-hover/tip:opacity-100 pointer-events-none transition-opacity duration-150 z-20 text-center shadow-xl whitespace-normal">
-                  마이클래스에 교재를 담아서<br />한번에 서비스를 이용해보세요 📚
-                  <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800" />
-                </div>
-              </div>
-              {/* 자료다운로드 */}
-              <button
-                className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-semibold border border-slate-200 text-slate-600 hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50 transition-all bg-white whitespace-nowrap"
-              >
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
-                자료다운로드
-              </button>
+              )}
             </div>
+
+            {/* 정보 */}
+            <div className="flex-1 min-w-0 flex flex-col justify-between py-1">
+              <div>
+                {/* 태그 */}
+                <div className="flex flex-wrap gap-1.5 mb-2.5">
+                  <span className="text-xs border border-slate-300 text-slate-500 px-2.5 py-0.5 rounded-full">참고서</span>
+                  <span className="text-xs border border-slate-300 text-slate-500 px-2.5 py-0.5 rounded-full">{book.levelGroup}</span>
+                  <span className="text-xs border border-slate-300 text-slate-500 px-2.5 py-0.5 rounded-full">영어</span>
+                  <span className="text-xs border border-slate-300 text-slate-500 px-2.5 py-0.5 rounded-full">{book.category}</span>
+                </div>
+                {/* 제목 */}
+                <h3 className="text-xl font-black text-slate-900 leading-snug mb-1.5">{book.title}</h3>
+                {/* 저자 */}
+                <p className="text-sm text-slate-500 mb-2">
+                  {book.author} · YBM · {book.publishDate}
+                </p>
+                {/* 한줄소개 */}
+                <p className="text-sm text-slate-500 line-clamp-1 leading-relaxed">{book.description}</p>
+              </div>
+
+              {/* 자료 아이콘 + 버튼 */}
+              <div className="flex items-center justify-between mt-5">
+                <div className="flex flex-wrap gap-x-5 gap-y-2">
+                  {(BOOK_RESOURCES[book.id] ?? []).map((r) => (
+                    <ResourceBadge key={r} type={r} onClick={() => handleResourceClick(book.id)} />
+                  ))}
+                </div>
+                <div className="flex items-center gap-2 shrink-0 ml-4">
+                  <div className="relative group/tip">
+                    <button
+                      onClick={() => togglePin(book.id)}
+                      className={`text-sm px-4 py-2 rounded-lg font-semibold transition-all whitespace-nowrap ${
+                        isLoggedIn && pinned.includes(book.id)
+                          ? "bg-blue-100 text-blue-700 border border-blue-300"
+                          : "bg-[#1B3A6B] hover:bg-[#163060] text-white"
+                      }`}
+                    >
+                      {isLoggedIn && pinned.includes(book.id) ? "✓ 담김" : "마이북 담기"}
+                    </button>
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-[26rem] bg-slate-800 text-white text-[18px] rounded-xl px-6 py-5 leading-relaxed opacity-0 group-hover/tip:opacity-100 pointer-events-none transition-opacity duration-150 z-20 text-center shadow-xl whitespace-normal">
+                      <div className="flex items-center justify-center gap-2 mb-1">
+                        <svg className="w-5 h-5 text-blue-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                        </svg>
+                        <span className="font-bold">마이북</span>
+                      </div>
+                      마이북에 교재를 담아서<br />자료 다운로드와 서비스를 이용해보세요
+                      <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-slate-800" />
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      if (detailBookId === book.id) {
+                        setDetailBookId(null);
+                      } else {
+                        setDetailBookId(book.id);
+                        setInlineTab("intro");
+                      }
+                    }}
+                    className={`flex items-center gap-1.5 text-sm px-4 py-2 rounded-lg font-semibold border transition-all whitespace-nowrap ${
+                      detailBookId === book.id
+                        ? "bg-slate-800 text-white border-slate-800"
+                        : "border-slate-200 text-slate-600 hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50 bg-white"
+                    }`}
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    도서정보
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          {detailBookId === book.id && (
+            <div className="border-t border-slate-200">
+              <div className="flex">
+                {(["intro", "toc"] as const).map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setInlineTab(tab)}
+                    className={`flex-1 py-2.5 text-sm font-bold transition-colors ${
+                      inlineTab === tab
+                        ? "bg-slate-800 text-white"
+                        : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                    }`}
+                  >
+                    {tab === "intro" ? "도서 소개" : "목차"}
+                  </button>
+                ))}
+              </div>
+              <div className="p-8 bg-white min-h-[480px]">
+                {inlineTab === "intro" && (
+                  <div className="space-y-0.5">
+                    {renderDescription(BOOK_DB[book.id]?.description ?? book.description)}
+                  </div>
+                )}
+                {inlineTab === "toc" && (
+                  BOOK_DB[book.id]?.toc?.length ? (
+                    <ul className="flex flex-col">
+                      {BOOK_DB[book.id].toc.map((item, idx) => (
+                        <li key={idx} className="flex items-center gap-3 py-2.5 border-b border-slate-100">
+                          <span className="w-6 h-6 bg-blue-50 text-blue-600 rounded-full text-[11px] font-bold flex items-center justify-center shrink-0">
+                            {idx + 1}
+                          </span>
+                          <span className="text-sm text-slate-700">{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-slate-400">목차 정보가 없습니다.</p>
+                  )
+                )}
+              </div>
+            </div>
+          )}
           </div>
         ))}
       </div>
@@ -463,6 +631,7 @@ export default function TextbooksClient() {
           <p className="font-medium">검색 결과가 없습니다</p>
         </div>
       )}
+
     </div>
   );
 }

@@ -1,7 +1,52 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useMyClassBooks } from "../lib/useMyClassBooks";
+import { useMyMaterials, type SavedMaterial } from "../lib/useMyMaterials";
+import { useAuth } from "../lib/useAuth";
+import { BOOK_DB } from "../lib/bookDb";
+
+type ResourceType = "MP3" | "강의용PPT" | "기타" | "보충문제" | "본문파일" | "워크시트" | "정답&해설" | "온라인 수업자료" | "어휘리스트";
+
+const BOOK_RESOURCES: Record<string, ResourceType[]> = {
+  "1":  ["MP3", "어휘리스트", "본문파일", "워크시트", "정답&해설"],
+  "2":  ["어휘리스트", "강의용PPT", "보충문제", "워크시트", "정답&해설"],
+  "3":  ["MP3", "어휘리스트", "강의용PPT", "온라인 수업자료", "정답&해설"],
+  "4":  ["어휘리스트", "강의용PPT", "보충문제", "워크시트", "정답&해설"],
+  "5":  ["MP3", "어휘리스트", "보충문제", "정답&해설", "온라인 수업자료"],
+  "6":  ["MP3", "어휘리스트", "본문파일", "워크시트", "정답&해설"],
+  "7":  ["MP3", "강의용PPT", "온라인 수업자료", "기타"],
+  "8":  ["어휘리스트", "보충문제", "워크시트", "정답&해설"],
+  "9":  ["MP3", "어휘리스트", "보충문제", "본문파일", "워크시트", "정답&해설"],
+  "10": ["어휘리스트", "본문파일", "강의용PPT", "워크시트", "정답&해설"],
+  "11": ["어휘리스트", "본문파일", "강의용PPT", "정답&해설"],
+  "12": ["MP3", "어휘리스트", "본문파일", "정답&해설", "온라인 수업자료"],
+  "13": ["MP3", "어휘리스트", "본문파일", "워크시트", "정답&해설"],
+  "14": ["어휘리스트", "본문파일", "강의용PPT", "워크시트", "정답&해설"],
+  "15": ["어휘리스트", "보충문제", "본문파일", "정답&해설", "온라인 수업자료"],
+  "16": ["MP3", "정답&해설", "온라인 수업자료"],
+};
+
+function MyResourceBadge({ type }: { type: ResourceType }) {
+  const icons: Record<ResourceType, JSX.Element> = {
+    "MP3": <svg viewBox="0 0 18 18" className="w-5 h-5 shrink-0"><path d="M3 9a6 6 0 0 0 12 0" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" fill="none"/><rect x="1.5" y="9" width="3" height="4.5" rx="1" fill="#ef4444"/><rect x="13.5" y="9" width="3" height="4.5" rx="1" fill="#ef4444"/></svg>,
+    "강의용PPT": <svg viewBox="0 0 18 18" className="w-5 h-5 shrink-0"><rect x="1" y="2.5" width="16" height="10" rx="1.5" fill="#64748b"/><rect x="2.5" y="4" width="13" height="7" rx="0.5" fill="white"/><rect x="5" y="5.5" width="8" height="1" rx="0.5" fill="#3b82f6"/><rect x="5" y="7.5" width="5" height="1" rx="0.5" fill="#94a3b8"/><path d="M0.5 14h17" stroke="#94a3b8" strokeWidth="1.2" strokeLinecap="round" fill="none"/><path d="M6.5 14l1 2M11.5 14l-1 2" stroke="#94a3b8" strokeWidth="1.2" strokeLinecap="round" fill="none"/></svg>,
+    "보충문제": <svg viewBox="0 0 18 18" className="w-5 h-5 shrink-0"><rect x="2" y="1" width="12" height="16" rx="1.2" fill="#fb923c"/><path d="M5 6h7M5 9h7M5 12h5" stroke="white" strokeWidth="1.2" strokeLinecap="round" fill="none"/><circle cx="14" cy="14" r="3.5" fill="#ef4444"/><path d="M12.5 14h3M14 12.5v3" stroke="white" strokeWidth="1.2" strokeLinecap="round" fill="none"/></svg>,
+    "본문파일": <svg viewBox="0 0 18 18" className="w-5 h-5 shrink-0"><path d="M1.5 4H9v12L1.5 14V4z" fill="#dbeafe" stroke="#3b82f6" strokeWidth="1.1"/><path d="M9 4h7.5v10L9 16V4z" fill="#bfdbfe" stroke="#3b82f6" strokeWidth="1.1"/><path d="M3.5 7h3.5M3.5 9.5h2.5" stroke="#3b82f6" strokeWidth="0.9" strokeLinecap="round" fill="none"/><path d="M11 7h3.5M11 9.5h2.5" stroke="#3b82f6" strokeWidth="0.9" strokeLinecap="round" fill="none"/></svg>,
+    "워크시트": <svg viewBox="0 0 18 18" className="w-5 h-5 shrink-0"><rect x="1.5" y="11" width="3.5" height="5.5" rx="0.5" fill="#ef4444"/><rect x="7" y="7" width="3.5" height="9.5" rx="0.5" fill="#3b82f6"/><rect x="12.5" y="3" width="3.5" height="13.5" rx="0.5" fill="#ef4444"/><path d="M1 17.5h16" stroke="#64748b" strokeWidth="1" strokeLinecap="round" fill="none"/></svg>,
+    "정답&해설": <svg viewBox="0 0 18 18" className="w-5 h-5 shrink-0"><circle cx="9" cy="9" r="8" stroke="#ef4444" strokeWidth="1.4" fill="none"/><circle cx="9" cy="9" r="5" stroke="#ef4444" strokeWidth="1.4" fill="none"/><circle cx="9" cy="9" r="2" fill="#ef4444"/></svg>,
+    "온라인 수업자료": <svg viewBox="0 0 18 18" className="w-5 h-5 shrink-0"><circle cx="9" cy="9" r="7.5" fill="#eff6ff" stroke="#3b82f6" strokeWidth="1.3"/><ellipse cx="9" cy="9" rx="3.8" ry="7.5" stroke="#3b82f6" strokeWidth="1" fill="none"/><path d="M1.5 9h15M3 5.5h12M3 12.5h12" stroke="#3b82f6" strokeWidth="0.9" strokeLinecap="round" fill="none"/></svg>,
+    "기타": <svg viewBox="0 0 18 18" className="w-5 h-5 shrink-0"><circle cx="9" cy="9" r="7.5" fill="#e2e8f0" stroke="#94a3b8" strokeWidth="1.2"/><path d="M9 9 L9 1.5 A7.5 7.5 0 0 1 16.5 9 Z" fill="#94a3b8"/></svg>,
+    "어휘리스트": <svg viewBox="0 0 18 18" className="w-5 h-5 shrink-0"><rect x="1.5" y="1.5" width="15" height="15" rx="2" fill="#f0fdf4" stroke="#22c55e" strokeWidth="1.3"/><path d="M4 5.5h10M4 9h10M4 12.5h6" stroke="#22c55e" strokeWidth="1.2" strokeLinecap="round" fill="none"/><circle cx="14" cy="12.5" r="2.5" fill="#22c55e"/><path d="M13 12.5l.8.8 1.5-1.5" stroke="white" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>,
+  };
+  return (
+    <span className="flex items-center gap-2 text-xs text-slate-600 font-medium">
+      {icons[type]}
+      {type}
+    </span>
+  );
+}
 
 const LESSON_MATERIALS = [
   { id: "vocab",     label: "어휘리스트",  icon: "📝", type: "PDF",  color: "text-rose-500",   border: "border-rose-200",   bg: "bg-rose-50"   },
@@ -171,7 +216,7 @@ const TOOLS = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
       </svg>
     ),
-    href: "https://www.ybmcloud.com/twowaygames/content?siteType=E",
+    href: "__class-game__",
     color: "text-orange-500",
     border: "border-orange-200",
     bg: "hover:bg-orange-50",
@@ -190,37 +235,125 @@ const TOOLS = [
     bg: "hover:bg-cyan-50",
   },
   {
-    label: "퀴즈나우",
+    label: "AI 자료생성",
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M13 10V3L4 14h7v7l9-11h-7z" />
       </svg>
     ),
-    href: "__quiznow__",
-    color: "text-teal-600",
-    border: "border-teal-200",
-    bg: "hover:bg-teal-50",
-  },
-  {
-    label: "라이브샷",
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-      </svg>
-    ),
-    href: "__liveshot__",
-    color: "text-rose-500",
-    border: "border-rose-200",
-    bg: "hover:bg-rose-50",
+    href: "__ai-material__",
+    color: "text-violet-600",
+    border: "border-violet-200",
+    bg: "hover:bg-violet-50",
   },
 ];
 
+// ── 공통자료 파일 목록 ────────────────────────────────────────────────────
+const COMMON_FILE_ITEMS = [
+  { id: "01", name: "Answer Keys",               type: "PDF", category: "평가용" },
+  { id: "02", name: "MP3",                        type: "mp3", category: "수업용" },
+  { id: "03", name: "Teachers' Guides",           type: "PDF", category: "수업용" },
+  { id: "04", name: "PPT",                        type: "PPT", category: "수업용" },
+  { id: "05", name: "Word List & Word Check",     type: "PDF", category: "수업용" },
+  { id: "06", name: "Translation Worksheets",     type: "PDF", category: "수업용" },
+  { id: "07", name: "Dictation Worksheets",       type: "PDF", category: "수업용" },
+  { id: "08", name: "Unscramble Worksheets",      type: "PDF", category: "수업용" },
+  { id: "09", name: "Build Language Worksheets",  type: "PDF", category: "수업용" },
+  { id: "10", name: "Test Sheets",                type: "PDF", category: "평가용" },
+];
+
+const UNIT_FILE_TEMPLATES = [
+  { suffix: "PPT",        type: "PPT", category: "수업용" },
+  { suffix: "Word_List",  type: "PDF", category: "수업용" },
+  { suffix: "Worksheet",  type: "PDF", category: "수업용" },
+  { suffix: "MP3",        type: "mp3", category: "수업용" },
+  { suffix: "Test_Sheet", type: "PDF", category: "평가용" },
+  { suffix: "Answer_Key", type: "PDF", category: "평가용" },
+];
+
+const FILE_TYPE_STYLE: Record<string, { bg: string; label: string }> = {
+  PDF: { bg: "bg-red-500",    label: "PDF" },
+  mp3: { bg: "bg-blue-500",   label: "mp3" },
+  PPT: { bg: "bg-orange-500", label: "PPT" },
+  HWP: { bg: "bg-green-600",  label: "HWP" },
+  ZIP: { bg: "bg-amber-500",  label: "ZIP" },
+};
+
+function bookCode(title: string) {
+  return title.split(/\s+/).map(w => w[0]?.toUpperCase() ?? "").join("").slice(0, 3);
+}
+
+const MAT_TYPE: Record<string, { label: string; icon: string; color: string; bg: string; border: string }> = {
+  vocab:     { label: "어휘 학습지",  icon: "📝", color: "text-blue-700",   bg: "bg-blue-50",   border: "border-blue-200" },
+  reading:   { label: "독해 문제",    icon: "📖", color: "text-green-700",  bg: "bg-green-50",  border: "border-green-200" },
+  grammar:   { label: "문법 문제",    icon: "📐", color: "text-orange-700", bg: "bg-orange-50", border: "border-orange-200" },
+  cloze:     { label: "빈칸 채우기",  icon: "✏️", color: "text-purple-700", bg: "bg-purple-50", border: "border-purple-200" },
+  formative: { label: "형성평가",     icon: "📋", color: "text-red-700",    bg: "bg-red-50",    border: "border-red-200" },
+};
+
+function formatDate(iso: string) {
+  const d = new Date(iso);
+  return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,"0")}.${String(d.getDate()).padStart(2,"0")}`;
+}
+
+function BookMaterialCard({ mat, onDelete }: { mat: SavedMaterial; onDelete: (id: string) => void }) {
+  const tc = MAT_TYPE[mat.typeId] ?? { label: mat.typeLabel, icon: "📄", color: "text-slate-700", bg: "bg-slate-50", border: "border-slate-200" };
+  const title = [mat.schoolLevel, mat.grade, mat.typeLabel, mat.topic ? `· ${mat.topic}` : ""].filter(Boolean).join(" ");
+  return (
+    <div className={`bg-white rounded-xl border ${tc.border} shadow-sm overflow-hidden hover:shadow-md transition-shadow`}>
+      <div className={`${tc.bg} px-3 py-2 flex items-center justify-between`}>
+        <div className="flex items-center gap-1.5">
+          <span className="text-base">{tc.icon}</span>
+          <span className={`text-xs font-black ${tc.color}`}>{tc.label}</span>
+        </div>
+        <span className="text-[10px] text-slate-400">{formatDate(mat.createdAt)}</span>
+      </div>
+      <div className="px-3 py-2">
+        <p className="text-sm font-bold text-slate-800 leading-snug truncate">{title}</p>
+        <div className="flex items-center gap-1 mt-1.5 flex-wrap">
+          {mat.studentLevel && (
+            <span className={`text-[10px] px-2 py-0.5 rounded-full ${
+              mat.studentLevel === "기초" ? "bg-green-100 text-green-700" :
+              mat.studentLevel === "중급" ? "bg-blue-100 text-blue-700" :
+              "bg-purple-100 text-purple-700"
+            }`}>{mat.studentLevel}</span>
+          )}
+          {mat.topic && <span className="text-[10px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full truncate max-w-[120px]">{mat.topic}</span>}
+        </div>
+      </div>
+      <div className="px-3 pb-3 flex gap-2">
+        <Link
+          href={`/edutech/ai-material?typeId=${mat.typeId}&schoolLevel=${encodeURIComponent(mat.schoolLevel)}&grade=${encodeURIComponent(mat.grade)}&studentLevel=${encodeURIComponent(mat.studentLevel)}&topic=${encodeURIComponent(mat.topic)}&count=${mat.count}`}
+          className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-xs font-bold border-2 ${tc.border} ${tc.color} ${tc.bg} hover:opacity-80 transition-all`}
+        >
+          다시 보기
+        </Link>
+        <button
+          onClick={() => onDelete(mat.id)}
+          className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 text-slate-400 hover:border-red-300 hover:text-red-500 hover:bg-red-50 transition-all"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function MyClassClient() {
+  const { isLoggedIn, ready } = useAuth();
   const { ids: myBookIds, removeBook } = useMyClassBooks();
+  const { materials, remove: removeMaterial } = useMyMaterials();
+  const searchParams = useSearchParams();
+  const initialBookId = searchParams.get("book");
   const [selectedId, setSelectedId] = useState<string>("");
 
   useEffect(() => {
+    if (initialBookId && myBookIds.includes(initialBookId)) {
+      setSelectedId(initialBookId);
+      return;
+    }
     if (myBookIds.length > 0 && (!selectedId || !myBookIds.includes(selectedId))) {
       setSelectedId(myBookIds[0]);
     }
@@ -232,14 +365,39 @@ export default function MyClassClient() {
   // 수업안 만들기 팝업
   const [lessonPreviewPopup, setLessonPreviewPopup] = useState(false);
 
-  // 자료 다운로드 팝업
+  // 자료 다운로드 모드 + 장바구니
   const [downloadPopup, setDownloadPopup] = useState(false);
+  const [downloadMode, setDownloadMode] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
+  const [categoryFilter, setCategoryFilter] = useState<"전체"|"평가용"|"수업용">("전체");
+  const [typeFilter, setTypeFilter] = useState("전체");
+  const [commonExpanded, setCommonExpanded] = useState(true);
+  const [cartBounce, setCartBounce] = useState(false);
+  const triggerCartBounce = () => {
+    setCartBounce(false);
+    requestAnimationFrame(() => requestAnimationFrame(() => setCartBounce(true)));
+    setTimeout(() => setCartBounce(false), 500);
+  };
+  const toggleFile = (id: string) =>
+    setSelectedFiles(prev => {
+      const adding = !prev.includes(id);
+      if (adding) triggerCartBounce();
+      return adding ? [...prev, id] : prev.filter(f => f !== id);
+    });
+  const [scrapItems, setScrapItems] = useState<{ id: string; name: string; type: string }[]>([]);
+  const scrapRef = useRef<HTMLDivElement>(null);
+  const [toast, setToast] = useState(false);
+  const showToast = () => { setToast(true); setTimeout(() => setToast(false), 2500); };
+  const [scrapToast, setScrapToast] = useState(false);
+  const showScrapToast = () => { setScrapToast(true); setTimeout(() => setScrapToast(false), 2500); };
+
+  // 자료 미리보기
+  const [previewFile, setPreviewFile] = useState<{ name: string; type: string } | null>(null);
 
   // 온라인 콘텐츠 팝업
   const [onlinePopup, setOnlinePopup] = useState(false);
-
-  // 라이브샷 팝업
-  const [liveshotPopup, setLiveshotPopup] = useState(false);
+  const [onlineContentModal, setOnlineContentModal] = useState(false);
+  const [onlineModalSelected, setOnlineModalSelected] = useState<string[]>([]);
 
   // 학급관리 팝업
   const [classManagePopup, setClassManagePopup] = useState(false);
@@ -250,12 +408,11 @@ export default function MyClassClient() {
   // 온라인 워크시트 팝업
   const [worksheetPopup, setWorksheetPopup] = useState(false);
 
-  // 퀴즈나우 팝업
-  const [quiznowPopup, setQuiznowPopup] = useState(false);
-
-
   // 자료 보기 팝업 (레슨별)
   const [viewPopup, setViewPopup] = useState<{ index: number; title: string } | null>(null);
+
+  // 목차 / 자료 다운로드 탭
+  const [tocTab, setTocTab] = useState<"download" | "lesson" | "class">("download");
 
   // 목차 펼침 상태 (첫 번째 레슨 기본 오픈)
   const [expandedLessons, setExpandedLessons] = useState<Set<number>>(new Set([0]));
@@ -266,18 +423,86 @@ export default function MyClassClient() {
       return next;
     });
   };
+  const [expandedDlLessons, setExpandedDlLessons] = useState<Set<number>>(new Set());
+  const toggleDlLesson = (i: number) => {
+    setExpandedDlLessons(prev => {
+      const next = new Set(prev);
+      if (next.has(i)) next.delete(i); else next.add(i);
+      return next;
+    });
+  };
+
+  // 자료 다운로드 팝오버 ref + 외부 클릭 닫기
+  const downloadRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!downloadMode) return;
+    const handler = (e: MouseEvent) => {
+      if (downloadRef.current && !downloadRef.current.contains(e.target as Node)) {
+        setDownloadMode(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [downloadMode]);
+
+  // 자료 다운로드 계산 (모든 state 선언 이후)
+  const dlCode = book ? bookCode(book.title) : "";
+  const dlUnitFiles = book ? book.toc.map((_, i) => ({
+    id: `unit-${i}`, name: `Unit ${i + 1}_Teaching Materials`, type: "ZIP", category: "수업용",
+  })) : [];
+  const dlAllFiles = [...COMMON_FILE_ITEMS, ...dlUnitFiles];
+  // 공통자료 섹션용 필터
+  const dlFiltered = COMMON_FILE_ITEMS.filter(f =>
+    (categoryFilter === "전체" || f.category === categoryFilter) &&
+    (typeFilter === "전체" || f.type === typeFilter)
+  );
+  const dlLeft  = dlFiltered.filter((_, i) => i % 2 === 0);
+  const dlRight = dlFiltered.filter((_, i) => i % 2 === 1);
+  const dlAllIds = dlFiltered.map(f => f.id);
+  const dlAllChecked = dlAllIds.length > 0 && dlAllIds.every(id => selectedFiles.includes(id));
+
+  if (!ready) return null;
+
+  if (!isLoggedIn) {
+    return (
+      <div className="flex min-h-[calc(100vh-64px)] bg-slate-50 items-center justify-center px-4">
+        <div className="text-center max-w-sm">
+          <div className="w-24 h-24 mx-auto mb-6 bg-slate-100 rounded-full flex items-center justify-center">
+            <svg className="w-12 h-12 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-black text-slate-800 mb-2">마이북</h2>
+          <p className="text-slate-500 text-sm mb-6 leading-relaxed">
+            로그인 후 이용 가능합니다.<br />
+            교재를 담고 수업 자료를 한 곳에서 관리해 보세요.
+          </p>
+          <Link
+            href="/login?next=/my-class"
+            className="inline-flex items-center gap-2 px-8 py-3 bg-[#1B3A6B] hover:bg-[#163060] text-white font-bold rounded-xl transition-colors text-sm"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+            </svg>
+            로그인
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
-    <div className="flex min-h-[calc(100vh-64px)] bg-slate-50">
+    <div className="min-h-[calc(100vh-64px)] bg-slate-50">
+    <div className="max-w-[1280px] mx-auto flex min-h-[calc(100vh-64px)]">
 
       {/* ── 왼쪽 사이드바 ── */}
-      <aside className="w-60 shrink-0 bg-white border-r border-slate-200 flex flex-col">
+      <aside className="w-60 shrink-0 bg-white border-r border-slate-200 flex flex-col sticky top-0 h-[calc(100vh-64px)] overflow-y-auto">
         {/* 헤더 */}
         <div className="px-6 pt-7 pb-5">
           <div className="flex items-center gap-2.5 mb-6">
             <span className="text-2xl">🐾</span>
-            <h2 className="font-black text-slate-800 text-lg">마이클래스</h2>
+            <h2 className="font-black text-slate-800 text-lg">마이북</h2>
           </div>
 
           {/* 교재 목록 */}
@@ -289,7 +514,7 @@ export default function MyClassClient() {
           ) : (
             <ul className="space-y-1">
               {myBookIds.map((id) => {
-                const b = BOOK_CATALOG[id];
+                const b = BOOK_CATALOG[id] ?? BOOK_DB[id];
                 if (!b) return null;
                 return (
                   <li key={id} className="flex items-center gap-1 group/item">
@@ -309,7 +534,7 @@ export default function MyClassClient() {
                     <button
                       onClick={() => removeBook(id)}
                       className="shrink-0 w-5 h-5 flex items-center justify-center rounded-full text-slate-300 hover:text-white hover:bg-red-400 transition-all opacity-0 group-hover/item:opacity-100 text-xs"
-                      title="마이클래스에서 제거"
+                      title="마이북에서 제거"
                     >
                       ✕
                     </button>
@@ -331,26 +556,93 @@ export default function MyClassClient() {
           </Link>
         </div>
 
-        {/* 하단 My Page */}
-        <div className="mt-auto border-t border-slate-100 px-5 py-5">
-          <Link
-            href="/my-page"
-            className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-semibold text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-all"
+        {/* ── 자료 장바구니 ── */}
+        <div className="mt-auto border-t border-slate-200">
+          <style>{`
+            @keyframes cartPop { 0%{transform:scale(1)} 40%{transform:scale(1.55)} 70%{transform:scale(0.9)} 100%{transform:scale(1)} }
+            @keyframes cartGlow { 0%,100%{box-shadow:none} 40%{box-shadow:0 0 0 6px rgba(255,255,255,0.35)} }
+            .cart-badge-pop { animation: cartPop 0.45s cubic-bezier(.36,.07,.19,.97) forwards; }
+            .cart-widget-glow { animation: cartGlow 0.45s ease-out forwards; }
+          `}</style>
+          <div
+            className={`mx-4 my-4 rounded-2xl overflow-hidden shadow-md ${cartBounce ? "cart-widget-glow" : ""}`}
+            style={{ background: "#e8453c" }}
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
-            My Page
-          </Link>
+            <div className="px-4 pt-4 pb-3 text-center">
+              <p className="text-white text-xs font-semibold leading-tight">내가<br/>선택한 자료</p>
+              <div
+                key={selectedFiles.length}
+                className={`mt-2 w-10 h-10 rounded-full bg-slate-900 text-white font-black text-lg flex items-center justify-center mx-auto ${cartBounce ? "cart-badge-pop" : ""}`}
+              >
+                {selectedFiles.length}
+              </div>
+              <p className="text-white text-xs font-bold mt-1">건</p>
+            </div>
+            {/* 온라인 콘텐츠 만들기 */}
+            <div className="px-3 pb-2">
+              <button
+                onClick={() => { setOnlineContentModal(true); setOnlineModalSelected([]); }}
+                className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl bg-white/20 hover:bg-white/30 text-white text-xs font-bold transition-all border border-white/30">
+                <span className="w-4 h-4 rounded-full bg-green-400 text-white text-[10px] font-black flex items-center justify-center shrink-0">S</span>
+                온라인 콘텐츠 만들기
+              </button>
+            </div>
+            {/* 다운로드 / 스크랩 */}
+            <div className="flex border-t border-white/20">
+              <button
+                onClick={showToast}
+                className="flex-1 flex flex-col items-center gap-1 py-3 hover:bg-white/10 transition-colors">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                <span className="text-white text-[10px] font-bold">다운로드</span>
+              </button>
+              <div className="w-px bg-white/20" />
+              <button
+                onClick={() => {
+                  const allFiles = [...COMMON_FILE_ITEMS, ...(book?.toc ?? []).map((_, i) => ({
+                    id: `unit-${i}`, name: `Unit ${i + 1}_Teaching Materials`, type: "ZIP", category: "수업용",
+                  }))];
+                  const toAdd = allFiles.filter(f => selectedFiles.includes(f.id));
+                  setScrapItems(prev => {
+                    const existIds = new Set(prev.map(s => s.id));
+                    return [...prev, ...toAdd.filter(f => !existIds.has(f.id))];
+                  });
+                  setSelectedFiles([]);
+                  showScrapToast();
+                  setTimeout(() => scrapRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
+                }}
+                className="flex-1 flex flex-col items-center gap-1 py-3 hover:bg-white/10 transition-colors">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                </svg>
+                <span className="text-white text-[10px] font-bold">스크랩</span>
+              </button>
+            </div>
+          </div>
+
+          {/* My Page */}
+          <div className="px-5 pb-4">
+            <Link
+              href="/my-page"
+              className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-semibold text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-all"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              My Page
+            </Link>
+          </div>
         </div>
       </aside>
 
       {/* ── 메인 콘텐츠 ── */}
-      <main className="flex-1 min-w-0 px-9 py-9 pr-56">
+      <main className="flex-1 min-w-0 py-9 px-8">
+        <div>
 
         {/* 페이지 타이틀 */}
         <div className="mb-7">
-          <h1 className="text-3xl font-black text-slate-800">마이클래스</h1>
+          <h1 className="text-3xl font-black text-slate-800">마이북</h1>
           <p className="text-slate-500 text-base mt-1">교재를 담으면 기능을 바로 이용할 수 있어요.</p>
         </div>
 
@@ -359,7 +651,7 @@ export default function MyClassClient() {
           <div className="flex flex-col items-center justify-center py-24 text-center gap-4">
             <span className="text-6xl">📚</span>
             <p className="text-lg font-bold text-slate-600">담은 교재가 없습니다</p>
-            <p className="text-sm text-slate-400">교재 페이지에서 마이클래스 담기를 눌러 추가해보세요.</p>
+            <p className="text-sm text-slate-400">교재 페이지에서 마이북 담기를 눌러 추가해보세요.</p>
             <Link href="/textbooks" className="mt-2 px-6 py-2.5 bg-[#1B3A6B] hover:bg-[#163060] text-white text-sm font-bold rounded-xl transition-colors">
               교재 보러 가기
             </Link>
@@ -373,207 +665,643 @@ export default function MyClassClient() {
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-7 mb-5">
           <div className="flex gap-7">
 
-            {/* 표지 + 자료 다운로드 버튼 */}
-            <div className="shrink-0 flex flex-col gap-3">
+            {/* 표지 */}
+            <div className="shrink-0 w-40">
               {book.image ? (
                 <img
                   src={book.image}
                   alt={book.title}
-                  className="w-28 h-36 object-cover rounded-xl shadow-md border border-slate-100"
+                  className="w-40 h-52 object-cover rounded-xl shadow-md border border-slate-100"
                 />
               ) : (
-                <div className="w-28 h-36 bg-gradient-to-br from-blue-100 to-indigo-200 rounded-xl flex items-center justify-center text-5xl shadow-md">
+                <div className="w-40 h-52 bg-gradient-to-br from-blue-100 to-indigo-200 rounded-xl flex items-center justify-center text-6xl shadow-md">
                   {book.emoji}
                 </div>
               )}
-              {/* 자료 다운로드 버튼 — 썸네일 아래 full width */}
+            </div>
+
+            {/* 정보 + 버튼 + 서비스 */}
+            <div className="flex-1 min-w-0">
+              {/* 교재명 + 저자 */}
+              <h2 className="font-black text-slate-800 text-xl leading-tight">{book.title}</h2>
+              <p className="text-base text-slate-500 mt-0.5 mb-4">{book.author}</p>
+
+              {/* 자료 아이콘 */}
+              <div className="flex flex-wrap gap-x-5 gap-y-2 mb-5">
+                {(BOOK_RESOURCES[selectedId] ?? []).map((r) => (
+                  <MyResourceBadge key={r} type={r} />
+                ))}
+              </div>
+
               <button
-                onClick={() => setDownloadPopup(true)}
-                className="w-28 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-[#1B3A6B] hover:bg-[#163060] text-white text-xs font-bold transition-all shadow-sm hover:shadow-md"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
-                자료 다운로드
-              </button>
-              {/* 내가 만든 자료 */}
-              <Link
-                href="/my-class/my-materials"
-                className="w-28 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 text-xs font-bold transition-all"
+                onClick={() => document.getElementById("book-materials")?.scrollIntoView({ behavior: "smooth", block: "start" })}
+                className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 text-xs font-bold transition-all mb-5"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
                 </svg>
-                내가만든자료
-              </Link>
-            </div>
-
-            {/* 정보 + 서비스 버튼 */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between gap-4 mb-5">
-                <div>
-                  <h2 className="font-black text-slate-800 text-xl leading-tight">{book.title}</h2>
-                  <p className="text-base text-slate-500 mt-0.5">{book.author}</p>
-                </div>
-              </div>
+                내가 만든 자료
+              </button>
 
               {/* 서비스 버튼 */}
-              <div className="grid grid-cols-3 gap-2.5">
-                {TOOLS.map((tool) => {
-                  const cls = `flex items-center gap-2.5 px-4 py-3 rounded-xl border-2 ${tool.border} bg-white transition-all shadow-sm hover:shadow-md hover:-translate-y-0.5 duration-150`;
-                  const inner = (
+              <div className="flex flex-wrap gap-2">
+                {(() => {
+                  const cls = `flex items-center gap-2 px-3 py-2 rounded-xl border-2 bg-white transition-all hover:shadow-sm hover:-translate-y-0.5 duration-150`;
+                  const inner = (tool: typeof TOOLS[number]) => (
                     <>
-                      <span className={`shrink-0 ${tool.color}`}>{tool.icon}</span>
+                      <span className={`shrink-0 ${tool.color} [&_svg]:w-4 [&_svg]:h-4`}>{tool.icon}</span>
                       <span className={`text-xs font-bold leading-tight ${tool.color}`}>{tool.label}</span>
                     </>
                   );
-                  if (tool.href === "__connecting__") {
-                    return <Link key={tool.label} href={`/edutech/connecting-book?bookId=${selectedId}`} className={cls}>{inner}</Link>;
-                  }
-                  if (tool.href === "__online__") {
-                    return <button key={tool.label} onClick={() => setOnlinePopup(true)} className={cls}>{inner}</button>;
-                  }
-                  if (tool.href === "__liveshot__") {
-                    return <button key={tool.label} onClick={() => setLiveshotPopup(true)} className={cls}>{inner}</button>;
-                  }
-                  if (tool.href === "__quiznow__") {
-                    return <button key={tool.label} onClick={() => setQuiznowPopup(true)} className={cls}>{inner}</button>;
-                  }
-                  return tool.href.startsWith("http") ? (
-                    <a key={tool.label} href={tool.href} target="_blank" rel="noopener noreferrer" className={cls}>{inner}</a>
-                  ) : (
-                    <Link key={tool.label} href={tool.href} className={cls}>{inner}</Link>
-                  );
-                })}
+                  return TOOLS.map((tool) => {
+                    if (tool.href === "__connecting__")
+                      return <Link key={tool.label} href={`/edutech/connecting-book/viewer?bookId=${selectedId}`} className={`${cls} ${tool.border}`}>{inner(tool)}</Link>;
+                    if (tool.href === "/edutech/vocab-wizard")
+                      return <Link key={tool.label} href={`/edutech/vocab-wizard?bookId=${selectedId}`} className={`${cls} ${tool.border}`}>{inner(tool)}</Link>;
+                    if (tool.href === "__online__")
+                      return <button key={tool.label} onClick={() => setOnlinePopup(true)} className={`${cls} ${tool.border}`}>{inner(tool)}</button>;
+                    if (tool.href === "__class-game__")
+                      return <Link key={tool.label} href={`/edutech/class-game?bookId=${selectedId}`} className={`${cls} ${tool.border}`}>{inner(tool)}</Link>;
+                    if (tool.href === "__ai-material__")
+                      return <Link key={tool.label} href={`/edutech/ai-material?bookId=${selectedId}&bookTitle=${encodeURIComponent(book.title)}`} className={`${cls} ${tool.border}`}>{inner(tool)}</Link>;
+                    return tool.href.startsWith("http")
+                      ? <a key={tool.label} href={tool.href} target="_blank" rel="noopener noreferrer" className={`${cls} ${tool.border}`}>{inner(tool)}</a>
+                      : <Link key={tool.label} href={tool.href} className={`${cls} ${tool.border}`}>{inner(tool)}</Link>;
+                  });
+                })()}
               </div>
+
             </div>
           </div>
         </div>
 
-        {/* ── 학급학생관리 (가로 한 줄) ── */}
-        <div className="rounded-2xl border border-[#1B3A6B]/20 overflow-hidden shadow-sm mb-5">
-          <div className="flex items-center gap-5 px-6 py-3.5 bg-[#1B3A6B]">
-            {/* 타이틀 */}
-            <div className="flex items-center gap-2.5 shrink-0">
-              <svg className="w-5 h-5 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              <span className="text-white font-bold text-base">학급학생관리</span>
-            </div>
-            <div className="w-px h-5 bg-white/20" />
-            {/* 버튼 두 개 */}
-            <div className="flex gap-2.5">
-              <button
-                onClick={() => setClassManagePopup(true)}
-                className="flex items-center gap-1.5 px-5 py-2 bg-white/10 hover:bg-white text-white hover:text-[#1B3A6B] text-sm font-semibold rounded-lg transition-all border border-white/20 hover:border-white"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                학급 관리
-              </button>
-              <button
-                onClick={() => setMessagePopup(true)}
-                className="flex items-center gap-1.5 px-5 py-2 bg-white/10 hover:bg-white text-white hover:text-[#1B3A6B] text-sm font-semibold rounded-lg transition-all border border-white/20 hover:border-white"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                </svg>
-                메시지 보내기
-              </button>
-            </div>
-          </div>
-        </div>
+        {/* ── 목차 / 선생님용 자료 다운로드 ── */}
+        <div className="rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
 
-        {/* ── 목차 ── */}
-        <div className="rounded-2xl border border-[#1B3A6B]/20 overflow-hidden shadow-sm">
-          <div className="flex items-center gap-2.5 px-6 py-3.5 bg-[#1B3A6B]">
-            <svg className="w-5 h-5 text-blue-200 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h7" />
-            </svg>
-            <span className="text-white font-bold text-base">목차</span>
-            <span className="ml-auto text-blue-300 text-sm">{book.toc.length}단원</span>
+          {/* 탭 헤더 */}
+          <div className="flex">
+            <button
+              onClick={() => setTocTab("download")}
+              className={`flex-1 py-4 text-sm font-bold transition-colors border-r border-slate-200 flex items-center justify-center gap-2 ${
+                tocTab === "download" ? "bg-teal-500 text-white" : "bg-white text-slate-500 hover:bg-slate-50"
+              }`}
+            >
+              {tocTab === "download" && (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+              선생님용 자료 다운로드
+            </button>
+            <button
+              onClick={() => setTocTab("lesson")}
+              className={`flex-1 py-4 text-sm font-bold transition-colors border-r border-slate-200 ${
+                tocTab === "lesson" ? "bg-[#1B3A6B] text-white" : "bg-white text-slate-500 hover:bg-slate-50"
+              }`}
+            >
+              단원별 수업하기
+            </button>
+            <button
+              onClick={() => setTocTab("class")}
+              className={`flex-1 py-4 text-sm font-bold transition-colors ${
+                tocTab === "class" ? "bg-[#1B3A6B] text-white" : "bg-white text-slate-500 hover:bg-slate-50"
+              }`}
+            >
+              학급·학생관리
+            </button>
           </div>
-          <ul className="divide-y divide-slate-100 bg-white">
-            {book.toc.map((lesson, i) => {
-              const isOpen = expandedLessons.has(i);
-              return (
-                <li key={i}>
-                  {/* 레슨 헤더 행 */}
-                  <div className={`flex items-center gap-4 px-5 py-3.5 ${isOpen ? "bg-slate-50" : "bg-white hover:bg-slate-50"} transition-colors`}>
-                    {/* 번호 뱃지 */}
-                    <span className="w-8 h-8 rounded-full bg-[#1B3A6B] text-white flex items-center justify-center text-xs font-black shrink-0">
-                      {String(i + 1).padStart(2, "0")}
-                    </span>
-                    {/* 레슨 제목 */}
-                    <span className="flex-1 text-base font-bold text-slate-800 truncate">{lesson.title}</span>
-                    {/* 액션 버튼 */}
-                    <div className="flex items-center gap-2 shrink-0">
-                      <button
-                        onClick={() => setViewPopup({ index: i, title: lesson.title })}
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-600 border border-slate-200 bg-white rounded-lg hover:bg-slate-100 hover:border-slate-300 transition-all whitespace-nowrap"
-                      >
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                        </svg>
-                        단원 자료 보기
-                      </button>
-                      {/* 펼침 버튼 */}
-                      <button
-                        onClick={() => toggleLesson(i)}
-                        className={`w-8 h-8 flex items-center justify-center rounded-lg border transition-all ${
-                          isOpen
-                            ? "bg-[#1B3A6B] border-[#1B3A6B] text-white"
-                            : "border-slate-200 bg-white text-slate-500 hover:border-[#1B3A6B] hover:text-[#1B3A6B]"
-                        }`}
-                      >
-                        <svg
-                          className={`w-4 h-4 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
-                          fill="none" stroke="currentColor" viewBox="0 0 24 24"
+
+          {/* ─ 단원별 수업하기 ─ */}
+          {tocTab === "lesson" && (
+            <ul className="divide-y divide-slate-100 bg-white">
+              {book.toc.map((lesson, i) => {
+                const isOpen = expandedLessons.has(i);
+                return (
+                  <li key={i}>
+                    <div className={`flex items-center gap-4 px-5 py-3.5 ${isOpen ? "bg-slate-50" : "bg-white hover:bg-slate-50"} transition-colors`}>
+                      <span className="w-8 h-8 rounded-full bg-[#1B3A6B] text-white flex items-center justify-center text-xs font-black shrink-0">
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
+                      <span className="flex-1 text-base font-bold text-slate-800 truncate">{lesson.title}</span>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          onClick={() => toggleLesson(i)}
+                          className={`w-8 h-8 flex items-center justify-center rounded-lg border transition-all ${
+                            isOpen ? "bg-[#1B3A6B] border-[#1B3A6B] text-white" : "border-slate-200 bg-white text-slate-500 hover:border-[#1B3A6B] hover:text-[#1B3A6B]"
+                          }`}
                         >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </button>
+                          <svg className={`w-4 h-4 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
+                    {isOpen && (
+                      <ul className="bg-slate-50/70 border-t border-slate-100">
+                        {lesson.subItems.map((sub, j) => (
+                          <li key={j} className="flex items-center gap-4 pl-10 pr-5 py-3 border-b border-slate-100 last:border-0 hover:bg-blue-50/40 transition-colors group">
+                            <div className="w-px h-8 bg-slate-300 shrink-0 rounded-full" />
+                            <div className="flex-1 min-w-0">
+                              <span className="text-sm font-semibold text-slate-700 group-hover:text-slate-900 block truncate">{sub.label}</span>
+                              <span className="text-xs text-slate-400">{sub.pages}</span>
+                            </div>
+                            <button
+                              onClick={() => setLessonPreviewPopup(true)}
+                              className="flex items-center gap-2 px-5 py-2.5 bg-teal-500 hover:bg-teal-600 text-white text-sm font-bold rounded-xl transition-colors shadow-sm whitespace-nowrap mr-2"
+                            >
+                              <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                              수업안 만들기
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+
+          {/* ─ 선생님용 자료 다운로드 ─ */}
+          {tocTab === "download" && (
+            <div className="bg-white">
+              {/* 분류 필터 */}
+              <div className="flex items-center gap-2 px-6 py-2 border-b border-slate-100">
+                <span className="text-xs font-bold text-slate-700 w-10 shrink-0">분류</span>
+                <div className="flex gap-1">
+                  {(["전체","평가용","수업용"] as const).map(c => (
+                    <button key={c} onClick={() => setCategoryFilter(c)}
+                      className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border transition-all ${
+                        categoryFilter === c ? "bg-[#1B3A6B]/10 border-[#1B3A6B] text-[#1B3A6B]" : "border-slate-200 text-slate-500 hover:border-slate-300"
+                      }`}>{c}</button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 파일 유형 필터 */}
+              <div className="flex items-center gap-2 px-6 py-2 border-b border-slate-100">
+                <span className="text-xs font-bold text-slate-700 whitespace-nowrap shrink-0">파일 유형</span>
+                <div className="flex gap-1.5 flex-nowrap">
+                  {[
+                    { label: "전체", value: "전체" },
+                    { label: "HWP",  value: "HWP"  },
+                    { label: "PDF",  value: "PDF"  },
+                    { label: "PPT",  value: "PPT"  },
+                    { label: "기타",  value: "ZIP"  },
+                  ].map(({ label, value }) => (
+                    <button key={value} onClick={() => setTypeFilter(value)}
+                      className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border transition-all ${
+                        typeFilter === value ? "bg-[#1B3A6B]/10 border-[#1B3A6B] text-[#1B3A6B]" : "border-slate-200 text-slate-500 hover:border-slate-300"
+                      }`}>{label}</button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 공통자료 섹션 헤더 */}
+              <div
+                className="flex items-center justify-between px-6 py-3.5 bg-slate-50 border-b border-slate-200 cursor-pointer select-none"
+                onClick={() => setCommonExpanded(v => !v)}
+              >
+                <span className="font-bold text-slate-700">공통자료</span>
+                <span className="w-7 h-7 flex items-center justify-center rounded-full bg-[#1B3A6B] text-white shrink-0">
+                  <svg className={`w-4 h-4 transition-transform duration-200 ${commonExpanded ? "" : "rotate-180"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 15l7-7 7 7" />
+                  </svg>
+                </span>
+              </div>
+
+              {commonExpanded && (
+                <div className="px-6 pt-4 pb-4">
+                  {/* 헤더 행: 전체선택 + 다운로드/스크랩 버튼 */}
+                  <div className="flex items-center gap-3 pb-3 mb-1 border-b border-slate-200">
+                    <input
+                      type="checkbox"
+                      checked={dlAllChecked}
+                      onChange={() => {
+                        if (dlAllChecked) {
+                          setSelectedFiles(prev => prev.filter(id => !dlAllIds.includes(id)));
+                        } else {
+                          setSelectedFiles(prev => [...new Set([...prev, ...dlAllIds])]);
+                          triggerCartBounce();
+                        }
+                      }}
+                      className="w-4 h-4 rounded accent-[#1B3A6B] cursor-pointer shrink-0"
+                    />
+                    <span className="text-sm font-bold text-slate-700 flex-1">공통자료</span>
+                    <button
+                      onClick={showToast}
+                      className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-300 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors"
+                    >
+                      다운로드
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => {
+                        const toAdd = dlFiltered.filter(f => selectedFiles.includes(f.id));
+                        setScrapItems(prev => {
+                          const existIds = new Set(prev.map(s => s.id));
+                          return [...prev, ...toAdd.filter(f => !existIds.has(f.id))];
+                        });
+                        setSelectedFiles([]);
+                        showScrapToast();
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-300 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors"
+                    >
+                      스크랩
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                      </svg>
+                    </button>
                   </div>
 
-                  {/* 하위 차시 목록 */}
-                  {isOpen && (
-                    <ul className="bg-slate-50/70 border-t border-slate-100">
-                      {lesson.subItems.map((sub, j) => (
-                        <li key={j} className="flex items-center gap-4 pl-10 pr-5 py-3 border-b border-slate-100 last:border-0 hover:bg-blue-50/40 transition-colors group">
-                          {/* 왼쪽 세로선 + 들여쓰기 */}
-                          <div className="w-px h-8 bg-slate-300 shrink-0 rounded-full" />
-                          {/* 차시 내용 */}
-                          <div className="flex-1 min-w-0">
-                            <span className="text-sm font-semibold text-slate-700 group-hover:text-slate-900 block truncate">{sub.label}</span>
-                            <span className="text-xs text-slate-400">{sub.pages}</span>
-                          </div>
-                          {/* 수업안 만들기 버튼 */}
-                          <button
-                            onClick={() => setLessonPreviewPopup(true)}
-                            className="flex items-center gap-2 px-5 py-2.5 bg-teal-500 hover:bg-teal-600 text-white text-sm font-bold rounded-xl transition-colors shadow-sm whitespace-nowrap mr-2"
-                          >
-                            <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </svg>
-                            수업안 만들기
-                          </button>
-                        </li>
+                  {/* 2열 파일 목록 */}
+                  {dlFiltered.length === 0 ? (
+                    <p className="text-sm text-slate-400 py-4 text-center">해당하는 자료가 없습니다.</p>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-x-8">
+                      {[dlLeft, dlRight].map((col, ci) => (
+                        <ul key={ci} className="divide-y divide-slate-100">
+                          {col.map(f => {
+                            const ts = FILE_TYPE_STYLE[f.type] ?? { bg: "bg-slate-400", label: f.type };
+                            const isChecked = selectedFiles.includes(f.id);
+                            return (
+                              <li key={f.id} className="flex items-center gap-2.5 py-3 group">
+                                <input
+                                  type="checkbox"
+                                  checked={isChecked}
+                                  onChange={() => toggleFile(f.id)}
+                                  className="w-4 h-4 rounded accent-[#1B3A6B] cursor-pointer shrink-0"
+                                />
+                                <span className={`${ts.bg} text-white text-[10px] font-black px-1.5 py-0.5 rounded shrink-0`}>{ts.label}</span>
+                                <span className="flex-1 text-sm text-slate-700 truncate min-w-0">
+                                  <span className="text-slate-400">{dlCode}_</span>{f.name}
+                                </span>
+                                <div className="flex items-center gap-2 text-slate-300 group-hover:text-slate-400 shrink-0">
+                                  <button className="hover:text-slate-600 transition-colors" onClick={() => setPreviewFile({ name: `${dlCode}_${f.name}`, type: f.type })}>
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                    </svg>
+                                  </button>
+                                  <button className="hover:text-slate-600 transition-colors" onClick={showToast}>
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                    </svg>
+                                  </button>
+                                  <button
+                                    className="hover:text-slate-600 transition-colors"
+                                    onClick={() => {
+                                      setScrapItems(prev => prev.find(s => s.id === f.id) ? prev : [...prev, { id: f.id, name: f.name, type: f.type }]);
+                                      showScrapToast();
+                                    }}
+                                  >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                                    </svg>
+                                  </button>
+                                </div>
+                              </li>
+                            );
+                          })}
+                        </ul>
                       ))}
-                    </ul>
+                    </div>
                   )}
-                </li>
-              );
-            })}
-          </ul>
+                </div>
+              )}
+
+              {/* 단원별 자료 */}
+              {book.toc.map((lesson, i) => {
+                const isOpen = expandedDlLessons.has(i);
+                return (
+                  <div key={i}>
+                    {/* 단원 헤더 */}
+                    <div
+                      className="flex items-center justify-between px-6 py-3.5 bg-slate-50 border-b border-slate-200 cursor-pointer select-none"
+                      onClick={() => toggleDlLesson(i)}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="w-7 h-7 rounded-full bg-[#1B3A6B] text-white flex items-center justify-center text-xs font-black shrink-0">
+                          {String(i + 1).padStart(2, "0")}
+                        </span>
+                        <span className="font-bold text-slate-700">{lesson.title}</span>
+                      </div>
+                      <span className="w-7 h-7 flex items-center justify-center rounded-full bg-[#1B3A6B] text-white shrink-0">
+                        <svg className={`w-4 h-4 transition-transform duration-200 ${isOpen ? "" : "rotate-180"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 15l7-7 7 7" />
+                        </svg>
+                      </span>
+                    </div>
+
+                    {/* 단원별 파일 목록 */}
+                    {isOpen && (() => {
+                      const unitNum = String(i + 1).padStart(2, "0");
+                      const unitFiles = UNIT_FILE_TEMPLATES.map((t, j) => ({
+                        id: `u${i}-${j}`,
+                        name: `Unit${unitNum}_${t.suffix}`,
+                        type: t.type,
+                        category: t.category,
+                      })).filter(f =>
+                        (categoryFilter === "전체" || f.category === categoryFilter) &&
+                        (typeFilter === "전체" || f.type === typeFilter)
+                      );
+                      const uLeft  = unitFiles.filter((_, k) => k % 2 === 0);
+                      const uRight = unitFiles.filter((_, k) => k % 2 === 1);
+                      return (
+                        <div className="px-6 pt-3 pb-4 bg-white border-b border-slate-100">
+                          {unitFiles.length === 0 ? (
+                            <p className="text-sm text-slate-400 py-3 text-center">해당하는 자료가 없습니다.</p>
+                          ) : (
+                            <div className="grid grid-cols-2 gap-x-8">
+                              {[uLeft, uRight].map((col, ci) => (
+                                <ul key={ci} className="divide-y divide-slate-100">
+                                  {col.map(f => {
+                                    const ts = FILE_TYPE_STYLE[f.type] ?? { bg: "bg-slate-400", label: f.type };
+                                    const isChecked = selectedFiles.includes(f.id);
+                                    return (
+                                      <li key={f.id} className="flex items-center gap-2.5 py-3 group">
+                                        <input
+                                          type="checkbox"
+                                          checked={isChecked}
+                                          onChange={() => toggleFile(f.id)}
+                                          className="w-4 h-4 rounded accent-[#1B3A6B] cursor-pointer shrink-0"
+                                        />
+                                        <span className={`${ts.bg} text-white text-[10px] font-black px-1.5 py-0.5 rounded shrink-0`}>{ts.label}</span>
+                                        <span className="flex-1 text-sm text-slate-700 truncate min-w-0">
+                                          <span className="text-slate-400">{dlCode}_</span>{f.name}
+                                        </span>
+                                        <div className="flex items-center gap-2 text-slate-300 group-hover:text-slate-400 shrink-0">
+                                          <button className="hover:text-slate-600 transition-colors" onClick={() => setPreviewFile({ name: `${dlCode}_${f.name}`, type: f.type })}>
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                            </svg>
+                                          </button>
+                                          <button className="hover:text-slate-600 transition-colors" onClick={showToast}>
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                            </svg>
+                                          </button>
+                                          <button
+                                            className="hover:text-slate-600 transition-colors"
+                                            onClick={() => {
+                                              setScrapItems(prev => prev.find(s => s.id === f.id) ? prev : [...prev, { id: f.id, name: f.name, type: f.type }]);
+                                              showScrapToast();
+                                            }}
+                                          >
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                                            </svg>
+                                          </button>
+                                        </div>
+                                      </li>
+                                    );
+                                  })}
+                                </ul>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* ─ 학급·학생관리 ─ */}
+          {tocTab === "class" && (() => {
+            const classes = [
+              { id: "c1", org: "와이비엠어학원 > 4학년", name: "그래머반", total: 0, groups: 2, from: "2026.06.18", to: "2027.02.01", lessons: 0 },
+              { id: "c2", org: "YBM스마트영어교습소 > 1, 5학년", name: "리딩반", total: 0, groups: 2, from: "2026.06.18", to: "2027.01.29", lessons: 0 },
+            ];
+            return (
+              <div className="bg-white px-7 py-6">
+                {/* 헤더 */}
+                <div className="flex items-center justify-between mb-5">
+                  <h3 className="text-lg font-black text-slate-800">학급 현황</h3>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setMessagePopup(true)}
+                      className="flex items-center gap-1.5 px-4 py-2 border border-slate-300 rounded-lg text-sm text-slate-600 font-semibold hover:bg-slate-50 transition-colors"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                      </svg>
+                      메시지 보내기
+                    </button>
+                    <button
+                      onClick={() => setClassManagePopup(true)}
+                      className="flex items-center gap-1.5 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-bold rounded-lg transition-colors"
+                    >
+                      신규 학급 등록
+                    </button>
+                  </div>
+                </div>
+
+                {/* 필터 */}
+                <div className="flex items-center gap-2 mb-5">
+                  <select className="px-3 py-1.5 border border-slate-300 rounded-lg text-sm text-slate-700 bg-white focus:outline-none focus:border-blue-400">
+                    <option>전체</option>
+                    <option>운영중</option>
+                    <option>종료</option>
+                  </select>
+                  <button className="w-8 h-8 flex items-center justify-center border border-slate-300 rounded-lg bg-white hover:bg-slate-50 transition-colors">
+                    <svg className="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* 학급 카드 그리드 */}
+                <div className="grid grid-cols-2 gap-4">
+                  {classes.map((cls) => (
+                    <button
+                      key={cls.id}
+                      onClick={() => setClassManagePopup(true)}
+                      className="text-left border border-slate-200 rounded-2xl p-5 bg-slate-50 hover:border-blue-300 hover:bg-blue-50/30 transition-all relative"
+                    >
+                      {/* 상단: 기관 + 인원 */}
+                      <div className="flex items-start justify-between gap-3 mb-1">
+                        <div>
+                          <p className="text-xs text-slate-500 mb-0.5">{cls.org}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-base font-black text-slate-800">{cls.name}</p>
+                            <button
+                              onClick={e => e.stopPropagation()}
+                              className="text-slate-400 hover:text-red-500 transition-colors"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4 shrink-0 text-center">
+                          <div>
+                            <p className="text-[11px] text-slate-400 mb-0.5">총 인원</p>
+                            <p className="text-2xl font-black text-blue-500">{cls.total}</p>
+                          </div>
+                          <div>
+                            <p className="text-[11px] text-slate-400 mb-0.5">모둠</p>
+                            <p className="text-2xl font-black text-slate-700">{cls.groups}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 운영기간 / 수업진행 */}
+                      <div className="mt-4 space-y-1.5">
+                        <p className="text-sm text-slate-600">
+                          <span className="font-bold">운영기간</span>
+                          <span className="ml-1">{cls.from} ~ {cls.to}</span>
+                        </p>
+                        <p className="text-sm text-slate-600">
+                          <span className="font-bold">수업진행</span>
+                          <span className="ml-1">총 {cls.lessons}개 수업</span>
+                        </p>
+                      </div>
+
+                      {/* 학생 미등록 안내 */}
+                      {cls.total === 0 && (
+                        <div className="mt-6 text-center text-xs text-red-500 space-y-0.5">
+                          <div className="flex items-center justify-center gap-1">
+                            <svg className="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                            <span className="font-semibold">학생이 등록되지 않았습니다.</span>
+                          </div>
+                          <p>학급을 클릭하여 초대 URL을 학생들에게 공유해주세요.</p>
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
         </div>
 
-        </>)}
+        {/* ── 내가 만든 자료 + 스크랩 자료 ── */}
+        {(() => {
+          const bookMaterials = materials.filter(m => m.bookId === selectedId);
+          return (
+            <div id="book-materials" className="flex gap-4 mt-5 items-stretch">
+
+              {/* 내가 만든 자료 */}
+              <div className="flex-1 rounded-2xl border border-indigo-200 overflow-hidden shadow-sm">
+                <div className="flex items-center gap-2.5 px-6 py-3.5 bg-indigo-600">
+                  <svg className="w-5 h-5 text-indigo-200 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                  </svg>
+                  <span className="text-white font-bold text-base">내가 만든 자료</span>
+                  <span className="ml-auto text-indigo-300 text-sm">{bookMaterials.length}개</span>
+                </div>
+                {bookMaterials.length === 0 ? (
+                  <div className="bg-white px-6 py-8 flex flex-col items-center text-center gap-2">
+                    <span className="text-4xl">📂</span>
+                    <p className="text-sm font-semibold text-slate-500">이 교재로 만든 자료가 없습니다.</p>
+                    <Link
+                      href={`/edutech/ai-material?bookId=${selectedId}&bookTitle=${encodeURIComponent(book?.title ?? "")}`}
+                      className="mt-1 flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-colors"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                      AI 자료 만들기
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="bg-white px-6 py-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {bookMaterials.map(mat => (
+                      <BookMaterialCard key={mat.id} mat={mat} onDelete={removeMaterial} />
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* 스크랩 자료 */}
+              <div ref={scrapRef} className="w-64 shrink-0 rounded-2xl border border-indigo-200 overflow-hidden shadow-sm flex flex-col">
+                <div className="flex items-center gap-2 px-4 py-3 bg-indigo-600">
+                  <svg className="w-4 h-4 text-indigo-200 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                  </svg>
+                  <span className="text-white font-bold text-sm">스크랩 자료</span>
+                  <span className="ml-auto text-indigo-300 text-xs">{scrapItems.length}개</span>
+                  {scrapItems.length > 0 && (
+                    <button onClick={() => setScrapItems([])}
+                      className="text-indigo-200 hover:text-white text-xs font-bold transition-colors">전체삭제</button>
+                  )}
+                </div>
+                {scrapItems.length === 0 ? (
+                  <div className="bg-white px-4 py-6 text-center flex-1">
+                    <span className="text-3xl">📌</span>
+                    <p className="text-xs font-semibold text-slate-400 mt-2">자료를 선택하고<br/>스크랩 버튼을 눌러보세요.</p>
+                  </div>
+                ) : (
+                  <ul className="bg-white divide-y divide-slate-100 flex-1 overflow-y-auto min-h-0">
+                    {scrapItems.map(item => {
+                      const ts = FILE_TYPE_STYLE[item.type] ?? { bg: "bg-slate-400", label: item.type };
+                      return (
+                        <li key={item.id} className="flex items-center gap-2 px-4 py-2.5 group">
+                          <span className={`${ts.bg} text-white text-[9px] font-black px-1.5 py-0.5 rounded shrink-0`}>{ts.label}</span>
+                          <span className="flex-1 text-xs text-slate-700 truncate">{item.name}</span>
+                          <button onClick={() => setScrapItems(prev => prev.filter(s => s.id !== item.id))}
+                            className="shrink-0 text-slate-300 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all">
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+
+            </div>
+          );
+        })()}
+
+        </> )}
+        </div>
       </main>
     </div>
+    </div>
 
+
+    {/* ── 자료 미리보기 모달 ── */}
+    {previewFile && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setPreviewFile(null)}>
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+          <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100">
+            <div className="flex items-center gap-2.5">
+              {(() => {
+                const ts = FILE_TYPE_STYLE[previewFile.type] ?? { bg: "bg-slate-400", label: previewFile.type };
+                return <span className={`text-[11px] font-bold text-white px-2 py-0.5 rounded ${ts.bg}`}>{ts.label}</span>;
+              })()}
+              <span className="font-bold text-slate-800 text-sm truncate">{previewFile.name} 미리보기</span>
+            </div>
+            <button onClick={() => setPreviewFile(null)} className="text-slate-400 hover:text-slate-600 transition-colors shrink-0">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div className="flex-1 overflow-auto bg-slate-50 flex flex-col items-center justify-center gap-4 py-16">
+            <div className="w-16 h-16 rounded-2xl bg-slate-200 flex items-center justify-center">
+              <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <p className="text-sm font-semibold text-slate-500">미리보기 준비 중입니다.</p>
+            <p className="text-xs text-slate-400">교사 인증 후 전체 파일을 다운로드할 수 있습니다.</p>
+          </div>
+        </div>
+      </div>
+    )}
 
     {/* ── 자료 다운로드 팝업 ── */}
     {downloadPopup && (
@@ -722,42 +1450,6 @@ export default function MyClassClient() {
       </div>
     )}
 
-    {/* ── 라이브샷 이미지 팝업 ── */}
-    {liveshotPopup && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
-        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setLiveshotPopup(false)} />
-        <div className="relative z-10 max-w-4xl w-full">
-          <button
-            onClick={() => setLiveshotPopup(false)}
-            className="absolute -top-4 -right-4 z-10 w-9 h-9 bg-white rounded-full shadow-lg flex items-center justify-center text-slate-600 hover:bg-red-500 hover:text-white transition-colors"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-          <img
-            src="/images/liveshot-preview.png"
-            alt="라이브 샷 화면"
-            className="w-full rounded-2xl shadow-2xl"
-          />
-          <div className="mt-4 flex justify-center">
-            <a
-              href="https://school.ybmsmartschool.com/RxPs23/snstest"
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => setLiveshotPopup(false)}
-              className="flex items-center gap-2 px-6 py-3 bg-teal-500 hover:bg-teal-600 text-white font-bold rounded-xl shadow-lg transition-colors"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-              </svg>
-              라이브샷 시작하기
-            </a>
-          </div>
-        </div>
-      </div>
-    )}
-
     {/* ── 학급관리 이미지 팝업 ── */}
     {classManagePopup && (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
@@ -866,41 +1558,100 @@ export default function MyClassClient() {
       </div>
     )}
 
-    {/* ── 퀴즈나우 이미지 팝업 ── */}
-    {quiznowPopup && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
-        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setQuiznowPopup(false)} />
-        <div className="relative z-10 max-w-4xl w-full">
-          <button
-            onClick={() => setQuiznowPopup(false)}
-            className="absolute -top-4 -right-4 z-10 w-9 h-9 bg-white rounded-full shadow-lg flex items-center justify-center text-slate-600 hover:bg-red-500 hover:text-white transition-colors"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-          <img
-            src="/images/quiznow-preview.png"
-            alt="퀴즈나우 화면"
-            className="w-full rounded-2xl shadow-2xl"
-          />
-          <div className="mt-4 flex justify-center">
-            <a
-              href="https://school.ybmsmartschool.com/quiz/quiz_list?grd_cd=301002&sso_tag=4e89ae318b9ea3a9b6ab376912995b03"
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => setQuiznowPopup(false)}
-              className="flex items-center gap-2 px-6 py-3 bg-purple-500 hover:bg-purple-600 text-white font-bold rounded-xl shadow-lg transition-colors"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+    {/* ── 온라인 콘텐츠 만들기 모달 (카트 버튼) ── */}
+    {onlineContentModal && book && (() => {
+      const MODAL_FILES = [
+        { id: "mf1", name: `${bookCode(book.title)}_교과서 PDF`,      sizeMB: 985  },
+        { id: "mf2", name: `${bookCode(book.title)}_교사용 교과서 PDF`, sizeMB: 2048 },
+      ];
+      const totalMB = MODAL_FILES.filter(f => onlineModalSelected.includes(f.id)).reduce((s, f) => s + f.sizeMB, 0);
+      const totalLabel = totalMB === 0 ? "0" : totalMB >= 1024 ? `${(totalMB/1024).toFixed(1)}GB` : `${totalMB}MB`;
+      const toggleFile = (id: string) =>
+        setOnlineModalSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+      return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setOnlineContentModal(false)} />
+          <div className="relative z-10 w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden">
+
+            {/* 헤더 */}
+            <div className="flex items-center justify-between px-6 py-4" style={{ background: "#e8453c" }}>
+              <h2 className="text-white font-black text-lg">온라인 콘텐츠 만들기</h2>
+              <button
+                onClick={() => setOnlineContentModal(false)}
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 text-white transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* 서브 헤더 */}
+            <div className="bg-slate-100 px-6 py-5 text-center">
+              <p className="font-black text-base" style={{ color: "#e8453c" }}>스마트스쿨 온라인 워크시트 만들기로 이동합니다.</p>
+              <p className="text-slate-500 text-sm mt-1">제작할 파일을 선택해주세요.</p>
+            </div>
+
+            {/* 안내 */}
+            <div className="flex items-start gap-2 px-6 py-4 border-b border-slate-100">
+              <svg className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              퀴즈나우 시작하기
-            </a>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                온라인 워크시트는 최대 수량 <strong>5개</strong>, 최대 용량 <strong>50MB</strong>까지 제작 가능합니다.
+              </p>
+            </div>
+
+            {/* 파일 목록 */}
+            <ul className="divide-y divide-slate-100">
+              {MODAL_FILES.map((f) => {
+                const checked = onlineModalSelected.includes(f.id);
+                const sizeLabel = f.sizeMB >= 1024 ? `${(f.sizeMB/1024).toFixed(0)}GB` : `${f.sizeMB}MB`;
+                return (
+                  <li
+                    key={f.id}
+                    onClick={() => toggleFile(f.id)}
+                    className="flex items-center gap-4 px-6 py-4 cursor-pointer hover:bg-slate-50 transition-colors"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      readOnly
+                      className="w-4 h-4 rounded cursor-pointer shrink-0"
+                      style={{ accentColor: "#e8453c" }}
+                    />
+                    <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: "#e8453c" }}>
+                      <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM6 20V4h5v7h7v9H6z"/>
+                      </svg>
+                    </div>
+                    <span className="flex-1 text-sm font-semibold text-slate-700 truncate">{f.name}</span>
+                    <span className="text-sm text-slate-400 font-medium shrink-0">{sizeLabel}</span>
+                  </li>
+                );
+              })}
+            </ul>
+
+            {/* 푸터 */}
+            <div className="flex items-center justify-between px-6 py-4 border-t border-slate-200 bg-white">
+              <p className="text-sm text-slate-600">
+                선택 파일 <strong>{onlineModalSelected.length}개</strong>
+                <span className="mx-2 text-slate-300">|</span>
+                전체 용량 <strong>{totalLabel}</strong>
+              </p>
+              <button
+                onClick={() => setOnlineContentModal(false)}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-white text-sm font-black transition-all"
+                style={{ background: "#e8453c" }}
+              >
+                온라인 워크시트 만들기
+              </button>
+            </div>
+
           </div>
         </div>
-      </div>
-    )}
+      );
+    })()}
 
     {/* ── 온라인 콘텐츠 이미지 팝업 ── */}
     {onlinePopup && (
@@ -971,6 +1722,26 @@ export default function MyClassClient() {
         </div>
       </div>
     )}
+    {/* ── 스크랩 토스트 ── */}
+    <div className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] transition-all duration-300 ${scrapToast ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"}`}>
+      <div className="flex items-center gap-3 px-6 py-3.5 bg-amber-500/95 backdrop-blur text-white rounded-2xl shadow-2xl">
+        <svg className="w-5 h-5 text-white shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+        </svg>
+        <span className="text-sm font-semibold">스크랩되었습니다. 스크랩 자료 목록을 확인하세요.</span>
+      </div>
+    </div>
+
+    {/* ── 다운로드 토스트 ── */}
+    <div className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] transition-all duration-300 ${toast ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"}`}>
+      <div className="flex items-center gap-3 px-6 py-3.5 bg-slate-900/90 backdrop-blur text-white rounded-2xl shadow-2xl">
+        <svg className="w-5 h-5 text-teal-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        </svg>
+        <span className="text-sm font-semibold">다운로드가 시작됩니다.</span>
+      </div>
+    </div>
+
     </>
   );
 }

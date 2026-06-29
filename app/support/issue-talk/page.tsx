@@ -4,7 +4,7 @@ const issues = [
   { id: 1, title: "커넥팅북 앱 로그인 오류 발생", status: "해결완료", date: "2025-05-19", replies: 3 },
   { id: 2, title: "어휘출제마법사 PDF 출력 오류", status: "처리중", date: "2025-05-18", replies: 1 },
   { id: 3, title: "AI평가 채점 결과 지연 문의", status: "해결완료", date: "2025-05-15", replies: 5 },
-  { id: 4, title: "마이클래스 학생 추가 안됨", status: "해결완료", date: "2025-05-10", replies: 2 },
+  { id: 4, title: "마이북 학생 추가 안됨", status: "해결완료", date: "2025-05-10", replies: 2 },
 ];
 
 export default function IssueTalkPage() {

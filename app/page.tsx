@@ -1,12 +1,13 @@
+import React from "react";
 import Link from "next/link";
-import SearchBar from "./components/SearchBar";
-
+import HomePersonalSection from "./components/HomePersonalSection";
+import HomeBannerSlider from "./components/HomeBannerSlider";
 
 const banners = [
   {
     id: 1,
-    title: "마이클래스, 수업안 만들기 이용 방법 안내",
-    sub: "마이클래스 기능 및 수업안 작성 가이드",
+    title: "마이북, 수업안 만들기 이용 방법 안내",
+    sub: "마이북 기능 및 수업안 작성 가이드",
     bg: "from-blue-600 to-indigo-700",
     href: "/support/notices?id=7",
   },
@@ -29,17 +30,17 @@ const banners = [
 ];
 
 const notices = [
-  { id: 7,  title: "마이클래스, 수업안 만들기 이용 방법 안내",            date: "2025-06-01", isImportant: true },
-  { id: 1,  title: "[공지] 2025년 YBM 신규 교재 등록 안내",              date: "2025-05-20", isImportant: true },
+  { id: 7,  title: "마이북, 수업안 만들기 이용 방법 안내",             date: "2025-06-01", isImportant: true },
+  { id: 1,  title: "[공지] 2025년 YBM 신규 교재 등록 안내",               date: "2025-05-20", isImportant: true },
   { id: 2,  title: "[공지] 에듀테크 서비스 점검 안내 (5/25 02:00~04:00)", date: "2025-05-18", isImportant: true },
-  { id: 3,  title: "AI평가 서비스 정식 출시 안내",                        date: "2025-05-15", isImportant: false },
-  { id: 4,  title: "커넥팅북 E-BOOK 업데이트 내역",                      date: "2025-05-10", isImportant: false },
+  { id: 3,  title: "AI평가 서비스 정식 출시 안내",                         date: "2025-05-15", isImportant: false },
+  { id: 4,  title: "커넥팅북 E-BOOK 업데이트 내역",                       date: "2025-05-10", isImportant: false },
 ];
 
 const faqs = [
   { q: "Y튜터는 누가 사용할 수 있나요?" },
   { q: "교재 자료는 어디서 다운받나요?" },
-  { q: "마이클래스 학생 수 제한이 있나요?" },
+  { q: "마이북 학생 수 제한이 있나요?" },
   { q: "유료 서비스는 어떻게 결제하나요?" },
   { q: "E-BOOK은 어떤 기기에서 사용할 수 있나요?" },
 ];
@@ -47,38 +48,95 @@ const faqs = [
 const recommendedBooks = [
   { id: "1",  title: "Reading Prime 1",             level: "중등", category: "독해",   emoji: "📘", image: "/images/books/reading-prime-1.jpg" },
   { id: "15", title: "Write NOW 1",                 level: "초등", category: "쓰기",   emoji: "✏️", image: "/images/books/write-now-1.jpg" },
-  { id: "3",  title: "Phonics NOW 1",               level: "초등", category: "파닉스", emoji: "📙", image: "/images/books/phonics-now-1.jpg" },
-  { id: "12", title: "Benchmark Reading Starter 1", level: "초등", category: "독해",   emoji: "📗", image: "/images/books/benchmark-reading-starter-1.jpg" },
-  { id: "10", title: "Booster 유형독해",             level: "고등", category: "독해",   emoji: "📰", image: "/images/books/booster-reading.jpg" },
-  { id: "16", title: "Listening Booster 30",        level: "고등", category: "듣기",   emoji: "🎧", image: "/images/books/listening-booster-30.jpg" },
+  { id: "3",  title: "Phonics NOW 1",               level: "초등", category: "파닉스", emoji: "📙", image: "/images/books/phonics-now-1.jpg",               isBest: true },
+  { id: "12", title: "Benchmark Reading Starter 1", level: "초등", category: "독해",   emoji: "📗", image: "/images/books/benchmark-reading-starter-1.jpg", isBest: true },
+  { id: "10", title: "Booster 유형독해",             level: "고등", category: "독해",   emoji: "📰", image: "/images/books/booster-reading.jpg",              isBest: true },
 ];
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen">
-      {/* Hero */}
-      <section className="bg-[#1B3A6B] text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 md:pt-16 pb-12 md:pb-16">
-          <div className="text-center mb-8">
-            <p className="text-blue-300 text-sm font-medium mb-2 tracking-wider uppercase">YBM 강사 전용 플랫폼</p>
-            <h1 className="text-3xl md:text-4xl font-black tracking-tight mb-3">
-              스마트한 수업, <span className="text-amber-400">Y튜터</span>와 함께
-            </h1>
-            <p className="text-blue-200 text-base md:text-lg">
-              교재·수업도구·학습로드맵을 한 곳에서 관리하세요
-            </p>
+    <div className="min-h-screen bg-slate-50">
+
+      {/* Hero — 전체 너비 배경 */}
+      <section style={{ background: "linear-gradient(135deg, #dbeafe 0%, #e0e7ff 50%, #ede9fe 100%)" }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex gap-3 min-h-[210px]">
+          {/* 왼쪽: 롤링 배너 슬라이더 */}
+          <HomeBannerSlider />
+
+          {/* 오른쪽: 개인화 — 내 교재 */}
+          <div className="flex-1 px-6 py-5 flex flex-col bg-white/80 backdrop-blur-sm rounded-xl border border-white shadow-sm">
+            <HomePersonalSection />
           </div>
-
-          {/* Search Bar */}
-          <SearchBar />
-
         </div>
       </section>
 
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-8 space-y-6">
+        {/* 에듀테크 바로가기 */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm px-5 py-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-1.5">
+              <span className="w-1 h-4 bg-blue-600 rounded-full inline-block" />
+              <span className="text-sm font-bold text-slate-800">에듀테크 바로가기</span>
+            </div>
+            <Link href="/edutech" className="text-[11px] text-blue-500 hover:text-blue-700 font-medium flex items-center gap-0.5">
+              전체보기
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+          </div>
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+            {([
+              { id: "class-game",    label: "클래스게임",    icon: <span className="text-3xl">🏆</span>, href: "/edutech/class-game",  isExt: false },
+              { id: "vocab-wizard",  label: "어휘출제마법사", icon: <span className="text-3xl">🪄</span>, href: "/edutech/vocab-wizard", isExt: false },
+              { id: "quick-quiz",    label: "깜짝퀴즈",      icon: (
+                <span className="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-blue-600 text-white font-black text-xl shadow-sm">Q</span>
+              ), href: "https://school.ybmsmartschool.com/quiz/quiz_list?grd_cd=301002&sso_tag=4e89ae318b9ea3a9b6ab376912995b03", isExt: true },
+              { id: "ai-eval",       label: "AI평가",        icon: <span className="text-3xl">🤖</span>, href: "/edutech/ai-eval",      isExt: false },
+              { id: "connecting-book", label: "커넥팅북",    icon: (
+                <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="4" y="2" width="28" height="32" rx="4" fill="#e0f2fe" stroke="#0ea5e9" strokeWidth="2"/>
+                  <line x1="4" y1="27" x2="32" y2="27" stroke="#0ea5e9" strokeWidth="1.5"/>
+                  <circle cx="18" cy="30.5" r="1.5" fill="#0ea5e9"/>
+                  <rect x="9" y="7" width="18" height="2" rx="1" fill="#0ea5e9" opacity="0.5"/>
+                  <rect x="9" y="11" width="14" height="2" rx="1" fill="#0ea5e9" opacity="0.4"/>
+                  <rect x="9" y="15" width="16" height="2" rx="1" fill="#0ea5e9" opacity="0.4"/>
+                </svg>
+              ), href: "https://www.ybmcloud.com/connecting/content?siteType=E", isExt: true },
+              { id: "ai-material",   label: "AI 자료생성",   icon: <span className="text-3xl">✨</span>, href: "/edutech/ai-material",  isExt: false, isNew: true },
+            ] as { id: string; label: string; icon: React.ReactNode; href: string; isExt: boolean; isNew?: boolean }[]).map((s) =>
+              s.isExt ? (
+                <a
+                  key={s.id}
+                  href={s.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="relative flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl border border-slate-100 bg-slate-50 hover:bg-blue-50 hover:border-blue-200 transition-colors group"
+                >
+                  {s.isNew && (
+                    <span className="absolute top-1.5 right-1.5 text-[8px] bg-red-500 text-white px-1.5 py-0.5 rounded-full font-bold leading-none">N</span>
+                  )}
+                  {s.icon}
+                  <span className="text-[13px] font-semibold text-slate-700 group-hover:text-blue-700 text-center leading-tight">{s.label}</span>
+                </a>
+              ) : (
+                <Link
+                  key={s.id}
+                  href={s.href}
+                  className="relative flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl border border-slate-100 bg-slate-50 hover:bg-blue-50 hover:border-blue-200 transition-colors group"
+                >
+                  {s.isNew && (
+                    <span className="absolute top-1.5 right-1.5 text-[8px] bg-red-500 text-white px-1.5 py-0.5 rounded-full font-bold leading-none">N</span>
+                  )}
+                  {s.icon}
+                  <span className="text-[13px] font-semibold text-slate-700 group-hover:text-blue-700 text-center leading-tight">{s.label}</span>
+                </Link>
+              )
+            )}
+          </div>
+        </div>
 
-{/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        {/* Banners */}
+        {/* 배너 */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {banners.map((banner) => (
             <Link
@@ -103,7 +161,7 @@ export default function HomePage() {
           ))}
         </div>
 
-        {/* Recommended Books */}
+        {/* 추천 도서 */}
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
           <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
             <div className="flex items-center gap-2">
@@ -117,22 +175,30 @@ export default function HomePage() {
               </svg>
             </Link>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 divide-x divide-y divide-slate-100">
-            {recommendedBooks.map((book) => (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-x divide-y divide-slate-100">
+            {recommendedBooks.map((book, idx) => (
               <Link
                 key={book.id}
-                href={`/textbooks/${book.id}`}
+                href={`/textbooks?open=${book.id}`}
                 className="p-4 hover:bg-blue-50 transition-colors group flex flex-col items-center text-center"
               >
-                {book.image ? (
-                  <img
-                    src={book.image}
-                    alt={book.title}
-                    className="w-16 h-[88px] object-cover rounded-lg shadow-sm border border-slate-100 mb-2.5"
-                  />
-                ) : (
-                  <div className="text-4xl mb-2">{book.emoji}</div>
-                )}
+                <div className="relative mb-2.5">
+                  {idx < 2 && (
+                    <span className="absolute -top-2 -right-2 z-10 bg-red-500 text-white border-2 border-yellow-300 text-[11px] font-black px-2 py-0.5 rounded-full leading-none tracking-wide">NEW</span>
+                  )}
+                  {book.isBest && (
+                    <span className="absolute -top-2 -right-2 z-10 bg-blue-500 text-white border-2 border-blue-200 text-[11px] font-black px-2 py-0.5 rounded-full leading-none tracking-wide">BEST</span>
+                  )}
+                  {book.image ? (
+                    <img
+                      src={book.image}
+                      alt={book.title}
+                      className="w-[84px] h-[115px] object-cover rounded-lg shadow-sm border border-slate-100"
+                    />
+                  ) : (
+                    <div className="text-4xl">{book.emoji}</div>
+                  )}
+                </div>
                 <p className="text-xs font-semibold text-slate-800 group-hover:text-blue-700 line-clamp-2 leading-snug w-full">
                   {book.title}
                 </p>
@@ -144,6 +210,7 @@ export default function HomePage() {
             ))}
           </div>
         </div>
+
         {/* 공지사항 + FAQ */}
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col sm:flex-row">
           {/* 공지사항 */}
@@ -177,7 +244,6 @@ export default function HomePage() {
             </ul>
           </div>
 
-          {/* 구분선 */}
           <div className="w-px bg-slate-100 hidden sm:block" />
           <div className="h-px bg-slate-100 sm:hidden" />
 
@@ -216,3 +282,4 @@ export default function HomePage() {
     </div>
   );
 }
+
